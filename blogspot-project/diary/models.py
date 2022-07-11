@@ -15,6 +15,9 @@ class Post(models.Model):
     updated = models.DateTimeField(auto_now=True)
     published = models.BooleanField(default=True)
 
+    class Meta:
+        ordering = ['-updated']
+
     def __str__(self) -> str:
         return f'{self.author.username}: {self.title}'
 

@@ -1,17 +1,17 @@
 {% extends 'diary/base.html' %}
 
-
 {% block title %} BlogPost Home Page {% endblock %}
 
 {% block content %}
 
-<h1>BlogPost Home Page</h1>
-<hr>
-<br>
-
 {% for post in  object_list %}
-<h2>{{ post.title }}</h2>
-<p><i>{{ post.content|truncatechars:100 }}</i></p>
+<a href="#"><h3>{{ post.title }}</h3></a>
+<p>
+    <i>{{ post.content|truncatechars:100 }}</i>
+    <br>
+    <a href="#" class="like">&#10084; {{ post.like_set.count }}</a>
+</p>
+
 <p>{{ post.author.username }}<br>{{ post.created }}</p>
 <br>
 {% endfor %}
