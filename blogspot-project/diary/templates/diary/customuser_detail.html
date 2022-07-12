@@ -1,0 +1,21 @@
+{% extends 'diary/base.html' %}
+
+{% block title %} author#{{object.pk}} {{ object.username }} {% endblock %}
+
+{% block content %}
+
+<h2>My posts</h2> 
+<br>
+{% for post in  object.post_set.all %}
+<a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
+<p class="author">{{ post.created }}</p>
+<p>
+    <i>{{ post.content|truncatechars:100 }}</i>
+    <br>
+    <a href="#" class="like">&#10084; {{ post.like_set.count }}</a>
+</p>
+<br>
+{% endfor %}
+
+
+{% endblock %}

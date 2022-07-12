@@ -6,7 +6,7 @@
 
 
 <h3>{{object.title}}</h3>
-<p class="author">{{ object.author.username }}<br>{{ object.created }}</p>
+<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a><br>{{ object.created }}</p>
 <p><i>{{object.content}}</i><br><a href="#" class="like">&#10084; {{ object.like__count }}</a></p>
 
 
