@@ -8,7 +8,10 @@
 <br>
 {% for post in  object.post_set.all %}
 <a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
-<p class="author">{{ post.created }}</p>
+<p class="author">{{ post.created }}
+    {% if not post.published %}
+    <br><b>*unpublished</b></p>
+    {% endif %}
 <p>
     <i>{{ post.content|truncatechars:100 }}</i>
     <br>

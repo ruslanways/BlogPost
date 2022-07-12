@@ -8,8 +8,12 @@ from django.db.models import Count
 
 class HomeView(ListView):
     template_name = 'diary/index.html'
-    queryset = Post.objects.annotate(Count('like')).select_related('author')
+    queryset = Post.objects.annotate(Count('like')).select_related('author').filter(published=True)
     ordering = ['-like__count']
+
+
+class PostListView(ListView):
+    queryset = Post.objects.annotate(Count('like')).select_related('author')
 
 
 class PostDetailView(DetailView):
