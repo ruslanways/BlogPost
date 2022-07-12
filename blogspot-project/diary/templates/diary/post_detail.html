@@ -1,0 +1,13 @@
+{% extends 'diary/base.html' %}
+
+{% block title %} post#{{object.pk}} {{ object.title }} {% endblock %}
+
+{% block content %}
+
+
+<h3>{{object.title}}</h3>
+<p class="author">{{ object.author.username }}<br>{{ object.created }}</p>
+<p><i>{{object.content}}</i><br><a href="#" class="like">&#10084; {{ object.like__count }}</a></p>
+
+
+{% endblock %}
