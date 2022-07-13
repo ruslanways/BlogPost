@@ -21,6 +21,7 @@ class AuthorListView(ListView):
 
 
 class AuthorDetailView(DetailView):
-    queryset = CustomUser.objects.all().prefetch_related(Prefetch('post_set', queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated')))
-
+    queryset = CustomUser.objects.all().prefetch_related(
+        Prefetch('post_set', queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated'))
+    )
 
