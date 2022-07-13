@@ -1,10 +1,6 @@
-from multiprocessing import context
-from pyexpat import model
-from urllib import request
-from django.shortcuts import render
-from django.views.generic import TemplateView, ListView, DetailView
+from django.views.generic import ListView, DetailView
 from .models import Post, CustomUser
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 class HomeView(ListView):
     template_name = 'diary/index.html'
@@ -25,9 +21,6 @@ class AuthorListView(ListView):
 
 
 class AuthorDetailView(DetailView):
-    queryset = CustomUser.objects.all().prefetch_related('post_set')
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['likes'] = Post.objects.annotate(Count('like')).filter(author__pk=self.object.pk).select_related('author')
-    #     return context
+    queryset = CustomUser.objects.all().prefetch_related(Prefetch('post_set', queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated')))
+
 

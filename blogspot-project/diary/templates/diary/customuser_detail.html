@@ -15,7 +15,7 @@
 <p>
     <i>{{ post.content|truncatechars:100 }}</i>
     <br>
-    <a href="#" class="like">&#10084; {{ post.like_set.count }}</a>
+    <a href="#" class="like">&#10084; {{ post.like__count }}</a>
 </p>
 <br>
 {% endfor %}
