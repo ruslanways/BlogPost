@@ -6,7 +6,7 @@
 
 {% for post in  object_list %}
 <a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
-<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a><br>{{ post.created }}
+<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a><br>{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not post.published %}
     <br>
     <b>*unpublished</b>
