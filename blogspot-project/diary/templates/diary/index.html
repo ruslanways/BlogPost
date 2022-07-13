@@ -8,7 +8,7 @@
 <a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
 <p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a><br>{{ post.created }}</p>
 <p>
-    <i>{{ post.content|truncatechars:100 }}</i>
+    <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     <br>
     <a href="#" class="like">&#10084; {{ post.like__count }}</a>
 </p>

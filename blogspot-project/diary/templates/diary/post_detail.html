@@ -11,7 +11,7 @@
     <br><b>*unpublished</b></p>
     {% endif %}
 </p>
-<p><i>{{object.content|linebreaks}}</i></p>
+<p>{{object.content|linebreaks}}</p>
 
 {% if object.image %}
 <img src="{{ object.image.url }}" alt="{{ object.title }} image" class="img-thumbnail">
