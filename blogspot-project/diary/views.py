@@ -5,7 +5,7 @@ from django.db.models import Count, Prefetch
 class HomeView(ListView):
     template_name = 'diary/index.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author').filter(published=True)
-    ordering = ['-like__count']
+    ordering = ['-like__count', '-updated']
 
 
 class PostListView(ListView):

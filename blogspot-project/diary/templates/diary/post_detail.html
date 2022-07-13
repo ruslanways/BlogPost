@@ -13,5 +13,9 @@
 </p>
 <p><i>{{object.content|linebreaks}}</i></p>
 
+{% if object.image %}
+<img src="{{ object.image.url }}" alt="{{ object.title }} image" class="img-thumbnail">
+{% endif %}
 
 {% endblock %}
+

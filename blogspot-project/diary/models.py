@@ -11,6 +11,7 @@ class Post(models.Model):
     title = models.CharField(max_length=100)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
+    image = models.ImageField(upload_to='diary/images/', blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     published = models.BooleanField(default=True)
