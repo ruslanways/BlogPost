@@ -14,4 +14,13 @@ a {
     font-family: 'Nunito', sans-serif;
 }
 
+.errorlist {
+    font-style: italic;
+    color: red;
+}
 
+/* .errorlist nonfield {
+    font-style: italic;
+    color: red;
+}
+ */
