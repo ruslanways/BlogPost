@@ -1,6 +1,8 @@
-from django.views.generic import ListView, DetailView
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView
 from .models import Post, CustomUser
 from django.db.models import Count, Prefetch
+from .forms import CustomUserCreationForm
 
 class HomeView(ListView):
     template_name = 'diary/index.html'
@@ -24,4 +26,10 @@ class AuthorDetailView(DetailView):
     queryset = CustomUser.objects.all().prefetch_related(
         Prefetch('post_set', queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated'))
     )
+
+
+class SignUp(CreateView):
+    form_class = CustomUserCreationForm
+    template_name ='registration/signup.html'
+    success_url = reverse_lazy('home')
 
