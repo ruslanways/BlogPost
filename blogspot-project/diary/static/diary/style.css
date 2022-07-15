@@ -19,8 +19,7 @@ a {
     color: red;
 }
 
-/* .errorlist nonfield {
-    font-style: italic;
-    color: red;
+.auth-form {
+    max-width: 500px;
 }
- */
+
