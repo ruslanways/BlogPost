@@ -7,6 +7,16 @@ from django.utils.translation import gettext_lazy as _
 
 class CustomUser(AbstractUser):
 
+    # make email field unique and required (not blank)
+
+    email = models.EmailField(
+        _("email address"), 
+        unique=True,  
+        error_messages={
+            "unique": _("A user with that email already exists."),
+        },
+    )
+
     def __init__(self, *args, **kwargs):
         self._meta.get_field(
             'username'
