@@ -1,3 +1,4 @@
+from dis import dis
 from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
@@ -23,7 +24,12 @@ class PostDetailView(DetailView):
 
 
 class AuthorListView(ListView):
-    model = CustomUser
+    def get_queryset(self):
+        customordering = 'id'
+        if self.kwargs.get('sortfield'):
+            customordering = '-' + self.kwargs.get('sortfield')
+        return CustomUser.objects.annotate(Count('post', distinct=True), Count('like', distinct=True), Count('post__like', distinct=True)).order_by(customordering)
+
 
 
 class AuthorDetailView(DetailView):
@@ -41,7 +47,6 @@ class SignUp(CreateView):
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
         self.object = form.save()
-        print(self.object.pk)
         """make an authorization after signingup"""
         login(self.request, self.object)
         """and redirect to user profile with user.pk"""

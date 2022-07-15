@@ -21,7 +21,7 @@ class CustomUserCreationForm(UserCreationForm):
         widget=forms.EmailInput(attrs={"autocomplete": "email", 'class': "form-control"}),
     )
 
-    class Meta:
+    class Meta(UserCreationForm.Meta):
         model = CustomUser
         fields = ('username', 'email')
         widgets = {
