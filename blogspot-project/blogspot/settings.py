@@ -154,3 +154,6 @@ EMAIL_HOST_USER = 'contact@grado.lviv.ua'
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 DEFAULT_FROM_EMAIL = 'contact@grado.lviv.ua'
 
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+

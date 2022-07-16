@@ -1,12 +1,17 @@
-from dis import dis
 from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth import login
 from .models import Post, CustomUser
 from django.db.models import Count, Prefetch
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from .forms import CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm
+from django.conf import settings
+import redis
+
+# just try simple redis connection with a practice purposes
+# see AuthorListView with implementation
+redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
 class HomeView(ListView):
@@ -25,11 +30,23 @@ class PostDetailView(DetailView):
 
 class AuthorListView(ListView):
     def get_queryset(self):
-        customordering = 'id'
+        """
+        implemet a user-ordering using redis
+        that contains last ordering filed to make reverse ordering by field
+        p.s. it's better to implement it on client side using js
+        """
         if self.kwargs.get('sortfield'):
-            customordering = '-' + self.kwargs.get('sortfield')
-        return CustomUser.objects.annotate(Count('post', distinct=True), Count('like', distinct=True), Count('post__like', distinct=True)).order_by(customordering)
-
+            if '-' + self.kwargs.get('sortfield') == redis_client.get('customordering').decode():
+                redis_client.set(name='customordering', value=self.kwargs.get('sortfield'))
+            else:
+                redis_client.set(name='customordering', value='-' + self.kwargs.get('sortfield'))
+        else:
+            redis_client.mset({'customordering': 'id'})
+        return CustomUser.objects.annotate(
+            Count('post', distinct=True), 
+            Count('like', distinct=True), 
+            Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode()
+        )
 
 
 class AuthorDetailView(DetailView):
@@ -59,4 +76,12 @@ class Login(LoginView):
 
     def get_default_redirect_url(self):
         return resolve_url('author-detail', self.request.user.pk)
+
+
+class PasswordReset(PasswordResetView):
+    form_class = CustomPasswordResetForm
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    form_class = CutomSetPasswordForm
 
