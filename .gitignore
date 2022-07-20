@@ -134,3 +134,7 @@ Temporary Items
 
 # VScode stuff
 .vscode/
+
+# media files from users (in database)
+media/
+
