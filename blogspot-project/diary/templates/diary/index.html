@@ -16,7 +16,15 @@
 <p>
     <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     <br>
-    <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
+        {% if user.is_authenticated %}
+            {% if post in liked_by_user %}
+            <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
+            {% else %}
+            <a href="{% url 'add-like' post.id %}" class="like">&#9825; {{ post.like__count }}</a>
+            {% endif %}
+        {% else %}
+        <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
+        {% endif %}
 </p>
 <br>
 {% endfor %}

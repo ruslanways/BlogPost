@@ -18,9 +18,16 @@ redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, d
 
 
 class HomeView(ListView):
+
     template_name = 'diary/index.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author').filter(published=True)
     ordering = ['-like__count', '-updated']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+        return context
 
 
 class PostListView(ListView):
