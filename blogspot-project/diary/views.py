@@ -2,10 +2,11 @@ from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
-from .models import Post, CustomUser
+from .models import Post, CustomUser, Like
 from django.db.models import Count, Prefetch
-from .forms import CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm
+from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm
 from django.conf import settings
 import redis
 
@@ -28,7 +29,13 @@ class PostDetailView(DetailView):
     queryset = Post.objects.annotate(Count('like')).select_related('author')
 
 
-class AuthorListView(ListView):
+class AuthorListView(UserPassesTestMixin, ListView):
+
+    permission_denied_message = 'Access for staff only!'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
     def get_queryset(self):
         """
         implemet a user-ordering using redis
@@ -84,4 +91,15 @@ class PasswordReset(PasswordResetView):
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     form_class = CutomSetPasswordForm
+
+
+class CreatePostView(LoginRequiredMixin, CreateView):
+    # model = Post
+    # fields = 'title', 'content', 'image', 'published'
+    form_class = AddPostForm
+    template_name ='diary/add-post.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
 

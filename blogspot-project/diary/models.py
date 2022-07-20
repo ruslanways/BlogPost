@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.urls import reverse
 from .validators import MyUnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
 
@@ -55,6 +56,9 @@ class Post(models.Model):
 
     def __str__(self) -> str:
         return f'{self.author.username}: {self.title}'
+    
+    def get_absolute_url(self):
+        return reverse('post-detail', kwargs={'pk': self.id})
 
 
 class Like(models.Model):

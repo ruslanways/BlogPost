@@ -68,7 +68,7 @@
   <br>
   <section>
     {% if user.is_authenticated %}
-    <a href="#" class="btn btn-primary btn-sm add-post">
+    <a href="{% url 'post-add' %}" class="btn btn-primary btn-sm add-post">
       Add post
     </a>
     {% endif %}

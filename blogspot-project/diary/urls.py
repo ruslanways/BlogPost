@@ -1,5 +1,5 @@
 from django.urls import include, path
-from .views import HomeView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView
+from .views import HomeView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -11,13 +11,14 @@ urlpatterns = [
     path('authors/<pk>/', AuthorDetailView.as_view(), name='author-detail'),
     path("logout/", LogoutView.as_view(), name="logout"),
     path('signup/', SignUp.as_view(), name='signup'),
-    path("login/", Login.as_view(), name="login"),
-    path("password_reset/", PasswordReset.as_view(), name="password_reset"),
+    path('login/', Login.as_view(), name="login"),
+    path('password_reset/', PasswordReset.as_view(), name="password_reset"),
     path(
-        "reset/<uidb64>/<token>/",
+        'reset/<uidb64>/<token>/',
         CustomPasswordResetConfirmView.as_view(),
         name="password_reset_confirm"
     ),
     path('', include('django.contrib.auth.urls')),
+    path('posts/add', CreatePostView.as_view(), name='post-add')
 ]
 

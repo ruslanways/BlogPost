@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm, UsernameField, PasswordResetForm, SetPasswordForm
 from django.contrib.auth import password_validation
 from django.utils.translation import gettext_lazy as _
-from .models import CustomUser
+from .models import CustomUser, Post
 
 class CustomUserCreationForm(UserCreationForm):
 
@@ -67,4 +67,16 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
         fields = ('username', 'email')
+
+
+class AddPostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = 'title', 'content', 'image', 'published'
+        widgets = {
+            'title': forms.TextInput(attrs={'class':'form-control'}),
+            'content': forms.Textarea(attrs={'class':'form-control'}),
+            'image': forms.FileInput(attrs={'class':'form-control'}),
+            'published': forms.CheckboxInput(attrs={'class':'form-check-input'}),
+        }
 
