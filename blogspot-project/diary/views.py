@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, resolve_url
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+from django.views import View
 from django.views.generic import ListView, DetailView, CreateView
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -9,6 +10,7 @@ from django.db.models import Count, Prefetch
 from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm
 from django.conf import settings
 import redis
+from django.db.utils import IntegrityError
 
 # just try simple redis connection with a practice purposes
 # see AuthorListView with implementation
@@ -94,12 +96,23 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 
 class CreatePostView(LoginRequiredMixin, CreateView):
-    # model = Post
-    # fields = 'title', 'content', 'image', 'published'
+
     form_class = AddPostForm
     template_name ='diary/add-post.html'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+
+class CreateLikeView(LoginRequiredMixin, View):
+    
+    http_method_names = ['get']
+
+    def get(self, *args, **kwargs):
+        try:
+            Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+        except IntegrityError:
+            Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk'])).delete()
+        return redirect(f"/#{self.kwargs['pk']}")
 

@@ -1,3 +1,7 @@
+html {
+    scroll-padding-top: 4rem;
+  }
+
 .like {
     font-size: x-small;
 }
@@ -5,6 +9,12 @@
 a {
     text-decoration: none !important;
 }
+
+a:focus {
+    outline: 0;
+    border: none;
+  }
+
 
 .author {
     font-size: x-small;

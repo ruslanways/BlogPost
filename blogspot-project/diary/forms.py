@@ -80,3 +80,4 @@ class AddPostForm(forms.ModelForm):
             'published': forms.CheckboxInput(attrs={'class':'form-check-input'}),
         }
 
+
