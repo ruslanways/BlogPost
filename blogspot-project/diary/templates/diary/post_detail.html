@@ -4,13 +4,24 @@
 
 {% block content %}
 
+<h3 id="{{post.pk}}"> 
 
-<h3> <a href="#" class="like">&#10084; {{ object.like__count }}</a> {{object.title}}</h3>
+    {% if user.is_authenticated and object in liked_by_user %}
+    <a a href="{% url 'add-like' object.id %}" class="like">&#10084; {{ object.like__count }}</a>
+    {% else %}
+    <a href="{% url 'add-like' object.id %}" class="like">&#9825; {{ object.like__count }}</a>
+    {% endif %}
+
+    {{object.title}}
+
+</h3>
+
 <p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a><br>{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not object.published %}
     <br><b>*unpublished</b></p>
     {% endif %}
 </p>
+
 <p>{{object.content|linebreaks}}</p>
 
 {% if object.image %}

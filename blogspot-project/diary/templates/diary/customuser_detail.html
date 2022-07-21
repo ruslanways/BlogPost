@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% load diary_tags %}
+ 
 <h2>My posts</h2> 
 <br>
 {% for post in  object.post_set.all %}
@@ -13,14 +15,18 @@
     <br><b>*unpublished</b></p>
     {% endif %}
 <p>
-    <i>{{ post.content|truncatechars:100 }}</i>
+    <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     <br>
-    {% if post in liked_by_user %}
-    <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
-    {% else %}
-    <a href="{% url 'add-like' post.id %}" class="like">&#9825; {{ post.like__count }}</a>
-    {% endif %}
 
+    
+    <a href="{% url 'add-like' post.id %}" class="like">   
+
+        {% autoescape off %}
+        {% like_or_unlike object post  %}
+        {% endautoescape %}
+       
+         {{ post.like__count }}
+    </a>
 
 </p>
 <br>
@@ -28,3 +34,4 @@
 
 
 {% endblock %}
+

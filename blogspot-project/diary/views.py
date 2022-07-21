@@ -43,7 +43,14 @@ class PostListView(UserPassesTestMixin, HomeView, ListView):
 
 
 class PostDetailView(DetailView):
+    
     queryset = Post.objects.annotate(Count('like')).select_related('author')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+        return context
 
 
 class AuthorListView(UserPassesTestMixin, ListView):
@@ -81,14 +88,9 @@ class AuthorDetailView(UserPassesTestMixin, DetailView):
         return self.request.user.is_staff or self.request.user.id == int(self.kwargs['pk'])
 
     queryset = CustomUser.objects.all().prefetch_related(
-        Prefetch('post_set', queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated'))
+        Prefetch('post_set', 
+        queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated'))
     )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            context['liked_by_user'] = Post.objects.filter(like__user=self.request.user)
-        return context
 
 
 class SignUp(CreateView):

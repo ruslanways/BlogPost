@@ -13,7 +13,7 @@
     {% endif %}
 </p>
 <p>
-    <i>{{ post.content|truncatechars:100 }}</i>
+    <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     <br>
 
     {% if user.is_authenticated and post in liked_by_user %}
