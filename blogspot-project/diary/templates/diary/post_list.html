@@ -5,7 +5,7 @@
 {% block content %}
 
 {% for post in  object_list %}
-<a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
+<a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}"><h3>{{ post.title }}</h3></a>
 <p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a><br>{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not post.published %}
     <br>
@@ -15,7 +15,13 @@
 <p>
     <i>{{ post.content|truncatechars:100 }}</i>
     <br>
-    <a href="#" class="like">&#10084; {{ post.like__count }}</a>
+
+    {% if user.is_authenticated and post in liked_by_user %}
+    <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
+    {% else %}
+    <a href="{% url 'add-like' post.id %}" class="like">&#9825; {{ post.like__count }}</a>
+    {% endif %}
+
 </p>
 <br>
 {% endfor %}

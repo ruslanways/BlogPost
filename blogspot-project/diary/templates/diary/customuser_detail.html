@@ -7,7 +7,7 @@
 <h2>My posts</h2> 
 <br>
 {% for post in  object.post_set.all %}
-<a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
+<a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}"><h3>{{ post.title }}</h3></a>
 <p class="author">{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not post.published %}
     <br><b>*unpublished</b></p>
@@ -15,7 +15,13 @@
 <p>
     <i>{{ post.content|truncatechars:100 }}</i>
     <br>
-    <a href="#" class="like">&#10084; {{ post.like__count }}</a>
+    {% if post in liked_by_user %}
+    <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
+    {% else %}
+    <a href="{% url 'add-like' post.id %}" class="like">&#9825; {{ post.like__count }}</a>
+    {% endif %}
+
+
 </p>
 <br>
 {% endfor %}

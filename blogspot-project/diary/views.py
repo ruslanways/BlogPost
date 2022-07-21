@@ -30,8 +30,16 @@ class HomeView(ListView):
         return context
 
 
-class PostListView(ListView):
+class PostListView(UserPassesTestMixin, HomeView, ListView):
+
+    template_name = 'diary/post_list.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author')
+    # ordering = ['-updated', '-like__count'] # inherit from parent class
+
+    permission_denied_message = 'Access for staff only!'
+
+    def test_func(self):
+        return self.request.user.is_staff
 
 
 class PostDetailView(DetailView):
@@ -65,10 +73,22 @@ class AuthorListView(UserPassesTestMixin, ListView):
         )
 
 
-class AuthorDetailView(DetailView):
+class AuthorDetailView(UserPassesTestMixin, DetailView):
+
+    permission_denied_message = 'Access for staff or profile owner!'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.id == int(self.kwargs['pk'])
+
     queryset = CustomUser.objects.all().prefetch_related(
         Prefetch('post_set', queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated'))
     )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            context['liked_by_user'] = Post.objects.filter(like__user=self.request.user)
+        return context
 
 
 class SignUp(CreateView):
@@ -121,5 +141,5 @@ class CreateLikeView(LoginRequiredMixin, View):
             Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
         except IntegrityError:
             Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk'])).delete()
-        return redirect(f"/#{self.kwargs['pk']}")
+        return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
 
