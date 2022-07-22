@@ -138,3 +138,7 @@ Temporary Items
 # media files from users (in database)
 media/
 
+# bash scripts for quick run django stuff
+runserver
+mm
+
