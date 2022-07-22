@@ -2,12 +2,13 @@ from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic.edit import UpdateView
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
 from .models import Post, CustomUser, Like
 from django.db.models import Count, Prefetch
-from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm
+from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm, UpdatePostForm
 from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
@@ -144,4 +145,21 @@ class CreateLikeView(LoginRequiredMixin, View):
         except IntegrityError:
             Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk'])).delete()
         return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
+
+
+class PostUpdateView(UserPassesTestMixin, UpdateView):
+
+    permission_denied_message = 'Access for staff or profile owner!'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
+
+    model = Post
+    form_class = UpdatePostForm
+    template_name ='diary/post-update.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
 

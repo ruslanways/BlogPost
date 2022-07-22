@@ -1,5 +1,5 @@
 from django.urls import include, path
-from .views import CreateLikeView, HomeView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView
+from .views import CreateLikeView, HomeView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -20,6 +20,7 @@ urlpatterns = [
     ),
     path('', include('django.contrib.auth.urls')),
     path('posts/add', CreatePostView.as_view(), name='post-add'),
-    path('likes/add/<pk>', CreateLikeView.as_view(), name='add-like')
+    path('likes/add/<pk>', CreateLikeView.as_view(), name='add-like'),
+    path('posts/<pk>/update', PostUpdateView.as_view(), name='post-update')
 ]
 

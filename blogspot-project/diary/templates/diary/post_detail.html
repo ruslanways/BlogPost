@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<h3 id="{{post.pk}}"> 
+<h3 id="{{object.pk}}"> 
 
     {% if user.is_authenticated and object in liked_by_user %}
     <a a href="{% url 'add-like' object.id %}" class="like">&#10084; {{ object.like__count }}</a>
@@ -14,6 +14,9 @@
 
     {{object.title}}
 
+    {% if user.is_authenticated and object.author == user or user.is_staff %}
+    <a href="{% url 'post-update' object.id %}">*update</a>
+    {% endif %}
 </h3>
 
 <p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a><br>{{ post.created|date }} at {{ post.created|time:"H:i" }}

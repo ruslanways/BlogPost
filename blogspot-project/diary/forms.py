@@ -81,3 +81,10 @@ class AddPostForm(forms.ModelForm):
         }
 
 
+class UpdatePostForm(AddPostForm):
+
+    class Meta(AddPostForm.Meta):
+        help_texts = {
+            'image': _("if you don't wish to change the image - just left it unattached here"),
+        }
+
