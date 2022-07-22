@@ -44,3 +44,18 @@ a:focus {
     right: 0;
 }
 
+.post {
+    display: flex;
+    justify-content: space-between;
+}
+
+.post-img {
+    object-fit: cover;
+    width: 200px;
+    height: 200px;
+}
+
+.post-content {
+    color: black;
+}
+

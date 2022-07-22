@@ -8,17 +8,20 @@
  
 <h2>My posts: {{ object.post_set.count }}</h2> 
 <br>
+
 {% for post in  object.post_set.all %}
+<div class="post">
+<div>
 <a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}"><h3>{{ post.title }}</h3></a>
 <p class="author">{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not post.published %}
-    <br><b>*unpublished</b></p>
+    <br><b>*unpublished</b>
     {% endif %}
 <p>
+    <a href="{% url 'post-detail' post.pk %}" class="post-content">
     <span class="short-post">{{ post.content|truncatechars:100 }}</span>
+    </a>
     <br>
-
-    
     <a href="{% url 'add-like' post.id %}" class="like">   
 
         {% autoescape off %}
@@ -27,8 +30,19 @@
        
          {{ post.like__count }}
     </a>
-
 </p>
+</div>
+
+{% if post.image %}
+<div>
+<a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}">
+<img src="{{ post.image.url }}" alt="" class="rounded float-left post-img">
+</a>
+</div>
+{% endif %}
+
+</div>
+<hr>
 <br>
 {% endfor %}
 

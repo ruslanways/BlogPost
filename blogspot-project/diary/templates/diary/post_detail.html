@@ -4,6 +4,8 @@
 
 {% block content %}
 
+<div style="display: flex; justify-content: space-between;">
+<div>
 <h3 id="{{object.pk}}"> 
 
     {% if user.is_authenticated and object in liked_by_user %}
@@ -13,30 +15,37 @@
     {% endif %}
 
     {{object.title}}
-
-    {% if user.is_authenticated and object.author == user or user.is_staff %}
-    <span>
-        <br>
-        <br>
-    <a href="{% url 'post-update' object.id %}" class="btn btn-success btn-sm">update</a>
-    <a href="{% url 'post-delete' object.id %}" class="btn btn-danger btn-sm">delete</a>
-    <br>
-    <br>
-    </span>
-    {% endif %}
 </h3>
+</div>
 
-<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a><br>{{ post.created|date }} at {{ post.created|time:"H:i" }}
+    <div>
+    {% if user.is_authenticated and object.author == user or user.is_staff %}
+    <a href="{% url 'post-update' object.id %}" class="btn btn-success btn-sm">Edit</a>
+    <a href="{% url 'post-delete' object.id %}" class="btn btn-danger btn-sm">Delete</a>
+    {% endif %}
+    </div>
+  
+</div>
+
+<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a>
+    <br>
+    {{ post.created|date }} at {{ post.created|time:"H:i" }}
+
     {% if not object.published %}
-    <br><b>*unpublished</b></p>
+    <br>
+    <b>*unpublished</b>
     {% endif %}
 </p>
 
-<p>{{object.content|linebreaks}}</p>
-
 {% if object.image %}
-<img src="{{ object.image.url }}" alt="{{ object.title }} image" class="img-thumbnail">
+<div style="max-width: 500px;">
+<a href="{{ object.image.url }}">
+<img src="{{ object.image.url }}" alt="{{ object.title }} image"  class="img-fluid">
+</a>
+</div>
 {% endif %}
+
+<p>{{object.content|linebreaks}}</p>
 
 {% endblock %}
 
