@@ -6,7 +6,7 @@
 
 {% load diary_tags %}
  
-<h2>My posts</h2> 
+<h2>My posts: {{ object.post_set.count }}</h2> 
 <br>
 {% for post in  object.post_set.all %}
 <a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}"><h3>{{ post.title }}</h3></a>
@@ -22,7 +22,7 @@
     <a href="{% url 'add-like' post.id %}" class="like">   
 
         {% autoescape off %}
-        {% like_or_unlike object post  %}
+        {% like_or_unlike user post  %}
         {% endautoescape %}
        
          {{ post.like__count }}

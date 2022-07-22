@@ -1,8 +1,8 @@
 from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy, reverse
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView
-from django.views.generic.edit import UpdateView
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
@@ -162,4 +162,17 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
+
+class PostDeleteView(PostUpdateView, DeleteView):
+
+    permission_denied_message = 'Access for staff or profile owner!'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
+
+    model = Post
+    template_name ='diary/post-delete.html'
+
+    def get_success_url(self, *args, **kwargs):
+        return reverse_lazy('author-detail', kwargs={'pk': f'{self.get_object().author_id}'})
 

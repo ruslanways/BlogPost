@@ -15,7 +15,14 @@
     {{object.title}}
 
     {% if user.is_authenticated and object.author == user or user.is_staff %}
-    <a href="{% url 'post-update' object.id %}">*update</a>
+    <span>
+        <br>
+        <br>
+    <a href="{% url 'post-update' object.id %}" class="btn btn-success btn-sm">update</a>
+    <a href="{% url 'post-delete' object.id %}" class="btn btn-danger btn-sm">delete</a>
+    <br>
+    <br>
+    </span>
     {% endif %}
 </h3>
 

@@ -14,6 +14,10 @@
     <br>
     {{post.created|date }} at {{ post.created|time:"H:i" }}</p>
 <p>
+    {% if post.image %}
+    <img src="{{ post.image.url }}" alt="" class="rounded float-left" width="200" height="200" style="object-fit: cover;">
+    <br>
+    {% endif %}
     <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     <br>
             {% if user.is_authenticated and post in liked_by_user %}
