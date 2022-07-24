@@ -80,6 +80,12 @@ class AuthorListView(UserPassesTestMixin, ListView):
             Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode()
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['posts'] = Post.objects.count()
+        context['likes'] = Like.objects.count()
+        return context
+
 
 class AuthorDetailView(UserPassesTestMixin, DetailView):
 

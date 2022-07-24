@@ -11,13 +11,23 @@
 <table class="table table-hover author-list">
     <thead>
       <tr class="table-light">
-        <th scope="col"><a href="{% url 'author-list' %}id" class="link-secondary">#</a></th>
-        <th scope="col"><a href="{% url 'author-list' %}username" class="link-secondary">Username</a></th>
-        <th scope="col"><a href="{% url 'author-list' %}date_joined" class="link-secondary">Date joined</a></th>
-        <th scope="col"><a href="{% url 'author-list' %}post__count" class="link-secondary">Total posts</a></th>
-        <th scope="col"><a href="{% url 'author-list' %}like__count" class="link-secondary">Likes provided</a></th>
-        <th scope="col"><a href="{% url 'author-list' %}post__like__count" class="link-secondary">Likes recieved</a></th>
+        <th scope="col"><a href="{% url 'author-list' %}id">#</a></th>
+        <th scope="col"><a href="{% url 'author-list' %}username">Username</a></th>
+        <th scope="col"><a href="{% url 'author-list' %}date_joined">Date joined</a></th>
+        <th scope="col"><a href="{% url 'author-list' %}post__count">Total posts</a></th>
+        <th scope="col"><a href="{% url 'author-list' %}like__count">Likes provided</a></th>
+        <th scope="col"><a href="{% url 'author-list' %}post__like__count">Likes recieved</a></th>
       </tr>
+
+      <tr class="table-light">
+        <th scope="col" class="link-secondary">{{ object_list.count }}</th>
+        <th scope="col" class="link-secondary"></th>
+        <th scope="col" class="link-secondary"></th>
+        <th scope="col" class="link-secondary">{{ posts }}</th>
+        <th scope="col" class="link-secondary">{{ likes }}</th>
+        <th scope="col" class="link-secondary"></th>
+      </tr>
+
     </thead>
     <tbody>
       {% for author in  object_list %}

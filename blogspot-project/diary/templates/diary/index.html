@@ -17,7 +17,7 @@
         {{post.created|date }} at {{ post.created|time:"H:i" }}
     </p>
     <p>
-        <a href="{% url 'post-detail' post.pk %}" class="post-content">
+        <a href="{% url 'post-detail' post.pk %}" class="post-content short-post">
             <span class="short-post">{{ post.content|truncatechars:100 }}</span>
         </a>
         <br>
