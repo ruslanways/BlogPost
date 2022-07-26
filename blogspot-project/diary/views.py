@@ -3,6 +3,7 @@ from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.list import MultipleObjectMixin
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
@@ -19,6 +20,8 @@ redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, d
 
 
 class HomeView(ListView):
+
+    paginate_by = 5
 
     template_name = 'diary/index.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author').filter(published=True)
@@ -44,6 +47,8 @@ class PostListView(UserPassesTestMixin, HomeView, ListView):
 
 
 class PostDetailView(DetailView):
+
+    template_name = 'diary/post_detail.html'
     
     queryset = Post.objects.annotate(Count('like')).select_related('author')
 
@@ -55,6 +60,8 @@ class PostDetailView(DetailView):
 
 
 class AuthorListView(UserPassesTestMixin, ListView):
+
+    template_name = 'diary/customuser_list.html'
 
     permission_denied_message = 'Access for staff only!'
 
@@ -87,17 +94,23 @@ class AuthorListView(UserPassesTestMixin, ListView):
         return context
 
 
-class AuthorDetailView(UserPassesTestMixin, DetailView):
+class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
+
+    template_name = 'diary/customuser_detail.html'
+
+    model = CustomUser
+
+    paginate_by = 5
 
     permission_denied_message = 'Access for staff or profile owner!'
 
     def test_func(self):
         return self.request.user.is_staff or self.request.user.id == int(self.kwargs['pk'])
 
-    queryset = CustomUser.objects.all().prefetch_related(
-        Prefetch('post_set', 
-        queryset=Post.objects.annotate(Count('like')).order_by('-like__count', '-updated'))
-    )
+    def get_context_data(self, **kwargs):
+        object_list = self.get_object().post_set.all().annotate(Count('like')).order_by('-updated', '-like__count')
+        context = super().get_context_data(object_list=object_list, **kwargs)
+        return context
 
 
 class SignUp(CreateView):
@@ -116,6 +129,8 @@ class SignUp(CreateView):
 
 
 class Login(LoginView):
+
+    template_name = 'registration/login.html'
 
     form_class = CustomAuthenticationForm
 

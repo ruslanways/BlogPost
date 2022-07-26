@@ -59,3 +59,6 @@ a:focus {
     color: black;
 }
 
+.selected {
+    background-color: lightgray !important;
+}

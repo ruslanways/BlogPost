@@ -6,10 +6,16 @@
 
 {% load diary_tags %}
  
-<h2>My posts: {{ object.post_set.count }}</h2> 
+<h2>
+    {% if user.is_staff %}
+    {{object.username}} posts:
+    {% else %}
+    My posts:
+    {% endif %}
+    {{ object.post_set.count }}</h2> 
 <br>
 
-{% for post in  object.post_set.all %}
+{% for post in  page_obj %}
 <div class="post">
 <div>
 <a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}"><h3>{{ post.title }}</h3></a>
@@ -28,7 +34,7 @@
         {% like_or_unlike user post  %}
         {% endautoescape %}
        
-         {{ post.like__count }}
+         {{ post.like_set.count }}
     </a>
 </p>
 </div>

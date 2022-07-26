@@ -21,7 +21,7 @@
   <header>
     <nav class="navbar fixed-top navbar-expand-lg bg-light container">
       <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'home' %}"><img src="{% static 'diary/images/logo.svg' %}">blogpost</a>
+        <a class="navbar-brand {% if view.template_name == 'diary/index.html' %}selected{% endif %}" href="{% url 'home' %}"><img src="{% static 'diary/images/logo.svg' %}">blogpost</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
           aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -47,20 +47,20 @@
             </li>
             {% if user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link active text-primary" href="{% url 'post-add' %}">Add post &#x1F4CC;</a>
+              <a class="nav-link active text-primary {% if view.template_name == 'diary/add-post.html' %}selected{% endif %}" href="{% url 'post-add' %}">Add post &#x1F4CC;</a>
             </li>
             {% endif %}
           </ul>
           <form class="d-flex" role="search">
             {% if request.user.is_authenticated %}
-            <button type="button" class="btn btn-sm btn-outline-secondary"
+            <button type="button" class="btn btn-sm btn-outline-secondary {% if view.template_name == 'diary/customuser_detail.html' %}active{% endif %}"
               onclick="location.href='{% url 'author-detail' user.pk %}';">{{user.username}}</button>
             <button type="button" class="btn btn-sm btn-outline-secondary"
               onclick="location.href='{% url 'logout' %}';">Logout</button>
             {% else %}
-            <button type="button" class="btn btn-sm btn-outline-secondary"
+            <button type="button" class="btn btn-sm btn-outline-secondary {% if view.template_name == 'registration/signup.html' %}active{% endif %}"
               onclick="location.href='{% url 'signup' %}';">Signup</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary"
+            <button type="button" class="btn btn-sm btn-outline-secondary {% if view.template_name == 'registration/login.html' %}active{% endif %}"
               onclick="location.href='{% url 'login' %}';">Login</button>
             {% endif %}
           </form>
@@ -74,6 +74,39 @@
   <section>
     {% block content %}
     {% endblock %}
+
+    {% if is_paginated %}
+    <nav>
+      <ul class="pagination justify-content-center">
+
+          {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a href="?page=1" class="page-link">First</a>
+        </li>
+        <li class="page-item">
+          <a href="?page={{ page_obj.previous_page_number }}" class="page-link">&laquo;</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+        
+          <a href="#" class="page-link">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </a>
+        </li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a href="?page={{ page_obj.next_page_number }}" class="page-link">&raquo;</a>
+        </li>
+        <li class="page-item">
+          <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">Last</a>
+        </li>
+        {% endif %}
+
+      </ul>
+    </nav>
+    {% endif %}
   </section>
   <div id="django-debug" style="display: none;">
     <pre>{% debug | escape %}</pre>
