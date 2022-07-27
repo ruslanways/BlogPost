@@ -4,6 +4,26 @@
 
 {% block content %} 
 
+<div class="center">
+<a href="{% url 'home' %}" class="link-success">&#9757; 
+    {% if ordering == 'fresh' %}
+    <b><u>Fresh posts</u></b>
+    {% else %}
+    Fresh posts
+    {% endif %}
+</a>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+<a href="{% url 'home-like-ordering' %}" class="link-danger"> &#10084; 
+    
+    {% if ordering == 'liked' %}
+    <b><u>Most liked posts</u></b>
+    {% else %}
+    Most liked posts
+    {% endif %}
+</a>
+</div>
+<hr>
+<br>
 {% for post in object_list %}
 <div class="post">
     

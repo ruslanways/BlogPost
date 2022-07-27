@@ -25,12 +25,22 @@ class HomeView(ListView):
 
     template_name = 'diary/index.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author').filter(published=True)
+    ordering = ['-updated', '-like__count']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['ordering'] = 'fresh'
+        if self.request.user.is_authenticated:
+            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+        return context
+
+
+class HomeViewLikeOrdered(HomeView):
     ordering = ['-like__count', '-updated']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+        context['ordering'] = 'liked'
         return context
 
 
@@ -150,6 +160,8 @@ class CreatePostView(LoginRequiredMixin, CreateView):
 
     form_class = AddPostForm
     template_name ='diary/add-post.html'
+
+    success_url = '/'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
