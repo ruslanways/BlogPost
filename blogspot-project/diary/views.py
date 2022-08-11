@@ -14,8 +14,8 @@ from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
 
-# just try simple redis connection with a practice purposes
-# see AuthorListView with implementation
+# just try simple redis connection with practice purposes
+# look to AuthorListView with implementation
 redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
