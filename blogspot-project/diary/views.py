@@ -13,6 +13,8 @@ from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm,
 from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
+from django.http import Http404
+
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
@@ -177,7 +179,12 @@ class CreateLikeView(LoginRequiredMixin, View):
             Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
         except IntegrityError:
             Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk'])).delete()
-        return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
+        except Post.DoesNotExist:
+            raise Http404
+        try:
+            return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
+        except KeyError:
+            return redirect('post-detail', self.kwargs['pk'])
 
 
 class PostUpdateView(UserPassesTestMixin, UpdateView):
