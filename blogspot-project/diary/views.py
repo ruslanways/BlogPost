@@ -14,14 +14,28 @@ from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
 from django.http import Http404
+from django.shortcuts import render
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
 redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
-class HomeView(ListView):
+class BaseView(View):
+    def dispatch(self, request, *args, **kwargs):
+        try: 
+            response = super().dispatch(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f'Exception {type(e)}, User: {self.request.user}, Page requested: {self.request.get_full_path()}')
+            return render(request, '400.html', status=400)
+        return response
+
+
+class HomeView(ListView, BaseView):
 
     paginate_by = 5
 
@@ -37,7 +51,7 @@ class HomeView(ListView):
         return context
 
 
-class HomeViewLikeOrdered(HomeView):
+class HomeViewLikeOrdered(HomeView, BaseView):
     ordering = ['-like__count', '-updated']
 
     def get_context_data(self, **kwargs):
@@ -46,7 +60,7 @@ class HomeViewLikeOrdered(HomeView):
         return context
 
 
-class PostListView(UserPassesTestMixin, HomeView, ListView):
+class PostListView(UserPassesTestMixin, HomeView, ListView, BaseView):
 
     template_name = 'diary/post_list.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author')
@@ -58,7 +72,7 @@ class PostListView(UserPassesTestMixin, HomeView, ListView):
         return self.request.user.is_staff
 
 
-class PostDetailView(DetailView):
+class PostDetailView(DetailView, BaseView):
 
     template_name = 'diary/post_detail.html'
     
@@ -71,7 +85,7 @@ class PostDetailView(DetailView):
         return context
 
 
-class AuthorListView(UserPassesTestMixin, ListView):
+class AuthorListView(UserPassesTestMixin, ListView, BaseView):
 
     template_name = 'diary/customuser_list.html'
 
@@ -106,7 +120,7 @@ class AuthorListView(UserPassesTestMixin, ListView):
         return context
 
 
-class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
+class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin, BaseView):
 
     template_name = 'diary/customuser_detail.html'
 
@@ -125,7 +139,7 @@ class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
         return context
 
 
-class SignUp(CreateView):
+class SignUp(CreateView, BaseView):
 
     form_class = CustomUserCreationForm
     template_name ='registration/signup.html'
@@ -140,7 +154,7 @@ class SignUp(CreateView):
         return redirect('author-detail',  self.object.pk)
 
 
-class Login(LoginView):
+class Login(LoginView, BaseView):
 
     template_name = 'registration/login.html'
 
@@ -150,15 +164,15 @@ class Login(LoginView):
         return resolve_url('author-detail', self.request.user.pk)
 
 
-class PasswordReset(PasswordResetView):
+class PasswordReset(PasswordResetView, BaseView):
     form_class = CustomPasswordResetForm
 
 
-class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+class CustomPasswordResetConfirmView(PasswordResetConfirmView, BaseView):
     form_class = CutomSetPasswordForm
 
 
-class CreatePostView(LoginRequiredMixin, CreateView):
+class CreatePostView(LoginRequiredMixin, CreateView, BaseView):
 
     form_class = AddPostForm
     template_name ='diary/add-post.html'
@@ -170,7 +184,7 @@ class CreatePostView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class CreateLikeView(LoginRequiredMixin, View):
+class CreateLikeView(LoginRequiredMixin, BaseView):
     
     http_method_names = ['get']
 
@@ -187,7 +201,7 @@ class CreateLikeView(LoginRequiredMixin, View):
             return redirect('post-detail', self.kwargs['pk'])
 
 
-class PostUpdateView(UserPassesTestMixin, UpdateView):
+class PostUpdateView(UserPassesTestMixin, UpdateView, BaseView):
 
     permission_denied_message = 'Access for staff or profile owner!'
 
@@ -203,7 +217,7 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
         return super().form_valid(form)
 
 
-class PostDeleteView(PostUpdateView, DeleteView):
+class PostDeleteView(PostUpdateView, DeleteView, BaseView):
 
     permission_denied_message = 'Access for staff or profile owner!'
 
