@@ -6,7 +6,7 @@
 
 <div style="display: flex; justify-content: space-between;">
 <div>
-<h3 id="{{object.pk}}"> 
+<h3> 
 
     {% if user.is_authenticated and object in liked_by_user %}
     <a a href="{% url 'add-like' object.id %}" class="like">&#10084; {{ object.like__count }}</a>

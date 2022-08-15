@@ -18,7 +18,7 @@
 {% for post in  page_obj %}
 <div class="post">
 <div>
-<a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}"><h3>{{ post.title }}</h3></a>
+<a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
 <p class="author">{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not post.published %}
     <br><b>*unpublished</b>
@@ -28,20 +28,15 @@
     <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     </a>
     <br>
-    <a href="{% url 'add-like' post.id %}" class="like">   
-
-        {% autoescape off %}
-        {% like_or_unlike user post  %}
-        {% endautoescape %}
-       
-         {{ post.like_set.count }}
+    <a href="{% url 'add-like' post.id %}" class="like">
+        {% autoescape off %}{% like_or_unlike user post %}{% endautoescape %} {{ post.like_set.count }}
     </a>
 </p>
 </div>
 
 {% if post.image %}
 <div>
-<a href="{% url 'post-detail' post.pk %}" id="{{post.pk}}">
+<a href="{% url 'post-detail' post.pk %}">
 <img src="{{ post.image.url }}" alt="" class="rounded float-left post-img">
 </a>
 </div>
