@@ -13,7 +13,7 @@ from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm,
 from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render
 import logging
 
@@ -64,7 +64,7 @@ class PostListView(UserPassesTestMixin, HomeView, ListView, BaseView):
 
     template_name = 'diary/post_list.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author')
-    # ordering = ['-updated', '-like__count'] # inherit from parent class
+    # ordering = ['-updated', '-like__count'] inherit from parent class
 
     permission_denied_message = 'Access for staff only!'
 
@@ -195,10 +195,11 @@ class CreateLikeView(LoginRequiredMixin, BaseView):
             Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk'])).delete()
         except Post.DoesNotExist:
             raise Http404
-        try:
-            return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
-        except KeyError:
-            return redirect('post-detail', self.kwargs['pk'])
+        # try:
+        #     return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
+        # except KeyError:
+        #     return redirect('post-detail', self.kwargs['pk'])
+        return HttpResponse(status=201)
 
 
 class PostUpdateView(UserPassesTestMixin, UpdateView, BaseView):
