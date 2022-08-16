@@ -53,7 +53,7 @@
           </ul>
           <form class="d-flex" role="search">
             {% if request.user.is_authenticated %}
-            <button type="button" class="btn btn-sm btn-outline-secondary {% if view.template_name == 'diary/customuser_detail.html' %}active{% endif %}"
+            <button type="button" id="user" class="btn btn-sm btn-outline-secondary {% if view.template_name == 'diary/customuser_detail.html' %}active{% endif %}"
               onclick="location.href='{% url 'author-detail' user.pk %}';">{{user.username}}</button>
             <button type="button" class="btn btn-sm btn-outline-secondary"
               onclick="location.href='{% url 'logout' %}';">Logout</button>

@@ -185,6 +185,11 @@ class CreatePostView(LoginRequiredMixin, CreateView, BaseView):
 
 
 class CreateLikeView(LoginRequiredMixin, BaseView):
+
+    redirect_field_name = '/'
+
+    # def get_redirect_field_name(self):
+    #     reverse_lazy('post-detail', kwargs={'pk': self.kwargs['pk']})
     
     http_method_names = ['get']
 
