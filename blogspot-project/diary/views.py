@@ -236,3 +236,13 @@ class PostDeleteView(PostUpdateView, DeleteView, BaseView):
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('author-detail', kwargs={'pk': f'{self.get_object().author_id}'})
 
+
+def getLikes(request, pk):
+    """
+    View to help update likes for updateLike function in fetch.js
+    """
+    post = Post.objects.get(pk=pk)
+    count_likes = post.like_set.all()
+    heart = "&#10084;" if request.user.like_set.all() & count_likes else "&#9825;"
+    return HttpResponse(heart + " " + str(count_likes.count()))
+
