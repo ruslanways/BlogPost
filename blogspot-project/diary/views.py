@@ -16,6 +16,12 @@ from django.db.utils import IntegrityError
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 import logging
+from rest_framework import generics, viewsets
+from .serializers import PostsSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import permissions
+from .permissions import OwnerOrAdmin
 
 
 logger = logging.getLogger(__name__)
@@ -243,6 +249,31 @@ def getLikes(request, pk):
     """
     post = Post.objects.get(pk=pk)
     count_likes = post.like_set.all()
-    heart = "&#10084;" if request.user.like_set.all() & count_likes else "&#9825;"
+
+    if request.user.is_authenticated:
+        heart = "&#10084;" if request.user.like_set.all() & count_likes else "&#9825;"
+    else: 
+        heart = "&#9825;"
     return HttpResponse(heart + " " + str(count_likes.count()))
+
+###############################################################################
+# Rest api with DRF
+
+class PostsAPIView(generics.ListCreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostsSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+
+class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostsSerializer
+    # permissions: Retrieve All, Update by Author only, Delete by Author or Admin
+    permission_classes = (OwnerOrAdmin, )
+
+
+# class PostViewSet(viewsets.ModelViewSet):
+#     queryset = Post.objects.all()
+#     serializer_class = PostsSerializer
+
 

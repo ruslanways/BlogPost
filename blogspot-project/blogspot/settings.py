@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'debug_toolbar',
     'diary.apps.DiaryConfig',
+    'rest_framework'
 ]
 
 AUTH_USER_MODEL = 'diary.CustomUser'
