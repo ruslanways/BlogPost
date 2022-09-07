@@ -10,7 +10,7 @@ from django.contrib.auth.views import LoginView, PasswordResetView, PasswordRese
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
 from .models import Post, CustomUser, Like
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, F
 from django.forms.models import model_to_dict
 from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm, UpdatePostForm
 from django.conf import settings
@@ -305,5 +305,19 @@ class CreateLikeAPIView(APIView):
             return Response({'status': "Post doesn't exist"}, status=404)
 
         return Response({reply: model_to_dict(like)}, status=status)
+
+
+class LikeAnalytics(APIView):
+
+    def get(self, *args, **kwargs):
+        date_from = self.request.GET.get('date_from')
+        date_to = self.request.GET.get('date_to')
+        if date_from and date_to:
+            likes = Like.objects.filter(created__date__range=[date_from, date_to])
+            total_likes = len(likes)
+            day_likes = likes.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
+            return Response({f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)}, status=200)
+
+        return Response({'Total all time likes': Like.objects.count()}, status=200)
 
 
