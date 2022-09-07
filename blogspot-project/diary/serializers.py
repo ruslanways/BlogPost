@@ -1,6 +1,7 @@
+from dataclasses import fields
 from email.policy import default
 from rest_framework import serializers
-from .models import Post
+from .models import Like, Post
 
 
 class PostsSerializer(serializers.ModelSerializer):
@@ -11,6 +12,5 @@ class PostsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
-
 
 

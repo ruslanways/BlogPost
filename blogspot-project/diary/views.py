@@ -1,3 +1,5 @@
+import copy
+
 from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy, reverse
 from django.views import View
@@ -9,11 +11,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
 from .models import Post, CustomUser, Like
 from django.db.models import Count, Prefetch
+from django.forms.models import model_to_dict
 from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm, UpdatePostForm
 from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets
@@ -201,16 +204,22 @@ class CreateLikeView(LoginRequiredMixin, BaseView):
 
     def get(self, *args, **kwargs):
         try:
-            Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            reply = 'like created'
+            status = 201
         except IntegrityError:
-            Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk'])).delete()
+            like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            like = copy.deepcopy(like_to_delete)
+            like_to_delete.delete()
+            reply = 'like deleted'
+            status = 204
         except Post.DoesNotExist:
             raise Http404
         # try:
         #     return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
         # except KeyError:
         #     return redirect('post-detail', self.kwargs['pk'])
-        return HttpResponse(status=201)
+        return JsonResponse({reply: model_to_dict(like)}, status=status)
 
 
 class PostUpdateView(UserPassesTestMixin, UpdateView, BaseView):
@@ -275,5 +284,26 @@ class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
 # class PostViewSet(viewsets.ModelViewSet):
 #     queryset = Post.objects.all()
 #     serializer_class = PostsSerializer
+
+
+class CreateLikeAPIView(APIView):
+
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, *args, **kwargs):
+        try:
+            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            reply = 'like created'
+            status = 201
+        except IntegrityError:
+            like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            like = copy.deepcopy(like_to_delete)
+            like_to_delete.delete()
+            reply = 'like deleted'
+            status = 204
+        except Post.DoesNotExist:
+            return Response({'status': "Post doesn't exist"}, status=404)
+
+        return Response({reply: model_to_dict(like)}, status=status)
 
 
