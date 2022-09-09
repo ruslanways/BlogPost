@@ -20,7 +20,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets
-from .serializers import PostsSerializer
+from .serializers import PostsSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -57,7 +57,6 @@ class HomeView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['ordering'] = 'fresh'
-        a = 1/0
         if self.request.user.is_authenticated:
             context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
         return context
@@ -271,6 +270,12 @@ def getLikes(request, pk):
 ###############################################################################
 # Rest api with DRF
 
+class UserListAPIView(generics.ListAPIView):
+    queryset = CustomUser.objects.all().order_by('-last_request')
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAdminUser, )
+
+
 class PostsAPIView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostsSerializer
@@ -322,7 +327,7 @@ class LikeAnalytics(APIView):
             total_likes = len(likes)
             day_likes = likes.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
             return Response({f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)}, status=200)
-        a = 1/0
+
         return Response({'Total all time likes': Like.objects.count()}, status=200)
 
 

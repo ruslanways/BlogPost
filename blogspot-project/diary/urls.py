@@ -1,7 +1,7 @@
 import imp
 from urllib import request
 from django.urls import include, path
-from .views import CreateLikeAPIView, CreateLikeView, HomeView, HomeViewLikeOrdered, LikeAnalytics, PostAPIDetailView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView, getLikes
+from .views import CreateLikeAPIView, CreateLikeView, HomeView, HomeViewLikeOrdered, LikeAnalytics, PostAPIDetailView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView, UserListAPIView, getLikes
 from django.contrib.auth.views import LogoutView
 from rest_framework import routers
 
@@ -32,6 +32,7 @@ urlpatterns = [
     path('posts/<pk>/update', PostUpdateView.as_view(), name='post-update'),
     path('posts/<pk>/delete', PostDeleteView.as_view(), name='post-delete'),
     path('likes_count/<pk>', getLikes, name='likes_count'),
+    path('api/v1/userlist/', UserListAPIView.as_view()),
     path('api/v1/postslist/', PostsAPIView.as_view()),
     path('api/v1/postdetail/<int:pk>', PostAPIDetailView.as_view()),
     path('api/v1/createlike/<int:pk>', CreateLikeAPIView.as_view()),
