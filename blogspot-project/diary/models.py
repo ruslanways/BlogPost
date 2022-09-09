@@ -18,6 +18,8 @@ class CustomUser(AbstractUser):
         },
     )
 
+    last_request = models.DateTimeField(_("last request"), blank=True, null=True)
+
     def __init__(self, *args, **kwargs):
         self._meta.get_field(
             'username'

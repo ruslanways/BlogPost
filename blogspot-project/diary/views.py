@@ -27,24 +27,26 @@ from rest_framework import permissions
 from .permissions import OwnerOrAdmin
 
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
 redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
-class BaseView(View):
-    def dispatch(self, request, *args, **kwargs):
-        try: 
-            response = super().dispatch(request, *args, **kwargs)
-        except Exception as e:
-            logger.error(f'Exception {type(e)}, User: {self.request.user}, Page requested: {self.request.get_full_path()}')
-            return render(request, '400.html', status=400)
-        return response
+# class BaseView(View):
+#     def dispatch(self, request, *args, **kwargs):
+#         try: 
+#             response = super().dispatch(request, *args, **kwargs)
+#         except Exception as e:
+#             logger.error(f'Exception {type(e)}, User: {self.request.user}, Page requested: {self.request.get_full_path()}')
+#             return render(request, '400.html', status=400)
+#         return response
 
 
-class HomeView(ListView, BaseView):
+class HomeView(ListView):
+
+    
 
     paginate_by = 5
 
@@ -55,12 +57,13 @@ class HomeView(ListView, BaseView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['ordering'] = 'fresh'
+        a = 1/0
         if self.request.user.is_authenticated:
             context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
         return context
 
 
-class HomeViewLikeOrdered(HomeView, BaseView):
+class HomeViewLikeOrdered(HomeView):
     ordering = ['-like__count', '-updated']
 
     def get_context_data(self, **kwargs):
@@ -69,7 +72,7 @@ class HomeViewLikeOrdered(HomeView, BaseView):
         return context
 
 
-class PostListView(UserPassesTestMixin, HomeView, ListView, BaseView):
+class PostListView(UserPassesTestMixin, HomeView, ListView):
 
     template_name = 'diary/post_list.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author')
@@ -81,7 +84,7 @@ class PostListView(UserPassesTestMixin, HomeView, ListView, BaseView):
         return self.request.user.is_staff
 
 
-class PostDetailView(DetailView, BaseView):
+class PostDetailView(DetailView):
 
     template_name = 'diary/post_detail.html'
     
@@ -94,7 +97,7 @@ class PostDetailView(DetailView, BaseView):
         return context
 
 
-class AuthorListView(UserPassesTestMixin, ListView, BaseView):
+class AuthorListView(UserPassesTestMixin, ListView):
 
     template_name = 'diary/customuser_list.html'
 
@@ -129,7 +132,7 @@ class AuthorListView(UserPassesTestMixin, ListView, BaseView):
         return context
 
 
-class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin, BaseView):
+class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
 
     template_name = 'diary/customuser_detail.html'
 
@@ -148,7 +151,7 @@ class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin, Bas
         return context
 
 
-class SignUp(CreateView, BaseView):
+class SignUp(CreateView):
 
     form_class = CustomUserCreationForm
     template_name ='registration/signup.html'
@@ -163,7 +166,7 @@ class SignUp(CreateView, BaseView):
         return redirect('author-detail',  self.object.pk)
 
 
-class Login(LoginView, BaseView):
+class Login(LoginView):
 
     template_name = 'registration/login.html'
 
@@ -173,15 +176,15 @@ class Login(LoginView, BaseView):
         return resolve_url('author-detail', self.request.user.pk)
 
 
-class PasswordReset(PasswordResetView, BaseView):
+class PasswordReset(PasswordResetView):
     form_class = CustomPasswordResetForm
 
 
-class CustomPasswordResetConfirmView(PasswordResetConfirmView, BaseView):
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     form_class = CutomSetPasswordForm
 
 
-class CreatePostView(LoginRequiredMixin, CreateView, BaseView):
+class CreatePostView(LoginRequiredMixin, CreateView):
 
     form_class = AddPostForm
     template_name ='diary/add-post.html'
@@ -193,7 +196,7 @@ class CreatePostView(LoginRequiredMixin, CreateView, BaseView):
         return super().form_valid(form)
 
 
-class CreateLikeView(LoginRequiredMixin, BaseView):
+class CreateLikeView(LoginRequiredMixin, View):
 
     redirect_field_name = '/'
 
@@ -222,7 +225,7 @@ class CreateLikeView(LoginRequiredMixin, BaseView):
         return JsonResponse({reply: model_to_dict(like)}, status=status)
 
 
-class PostUpdateView(UserPassesTestMixin, UpdateView, BaseView):
+class PostUpdateView(UserPassesTestMixin, UpdateView):
 
     permission_denied_message = 'Access for staff or profile owner!'
 
@@ -238,7 +241,7 @@ class PostUpdateView(UserPassesTestMixin, UpdateView, BaseView):
         return super().form_valid(form)
 
 
-class PostDeleteView(PostUpdateView, DeleteView, BaseView):
+class PostDeleteView(PostUpdateView, DeleteView):
 
     permission_denied_message = 'Access for staff or profile owner!'
 
@@ -310,14 +313,16 @@ class CreateLikeAPIView(APIView):
 class LikeAnalytics(APIView):
 
     def get(self, *args, **kwargs):
+
         date_from = self.request.GET.get('date_from')
         date_to = self.request.GET.get('date_to')
+
         if date_from and date_to:
             likes = Like.objects.filter(created__date__range=[date_from, date_to])
             total_likes = len(likes)
             day_likes = likes.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
             return Response({f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)}, status=200)
-
+        a = 1/0
         return Response({'Total all time likes': Like.objects.count()}, status=200)
 
 

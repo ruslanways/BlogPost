@@ -61,8 +61,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-
     'diary.middleware.UserLastRequestMiddleware',
+    'diary.middleware.UncaughtExceptionMiddleware',
 ]
 
 INTERNAL_IPS = [
@@ -142,7 +142,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'diary.views': {
+        'diary.middleware': {
             'handlers': ['file'],
             'level': 'WARNING',
             'propagate': True,
