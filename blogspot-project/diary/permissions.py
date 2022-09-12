@@ -6,8 +6,6 @@ class OwnerOrAdmin(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.method in ('PUT', 'PATCH'):
-            print(obj.author)
-            print(request.user)
             return obj.author == request.user
         return obj.author == request.user or request.user.is_staff
 

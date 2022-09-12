@@ -285,7 +285,7 @@ class PostsAPIView(generics.ListCreateAPIView):
 class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostsSerializer
-    # permissions: Retrieve All, Update by Author only, Delete by Author or Admin
+    # permissions: Retrieve by All, Update by Author only, Delete by Author or Admin
     permission_classes = (OwnerOrAdmin, )
 
 
