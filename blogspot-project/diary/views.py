@@ -241,12 +241,6 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
 
 class PostDeleteView(PostUpdateView, DeleteView):
 
-    # permission_denied_message = 'Access for staff or profile owner!'
-
-    # def test_func(self):
-    #     return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
-
-    # model = Post
     template_name ='diary/post-delete.html'
 
     def get_success_url(self, *args, **kwargs):
@@ -279,9 +273,19 @@ class CreateUserAPIView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserCreateSerializer
 
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)
-
+    # Override create method with return object to show also 'id' and 'is_active' fields,
+    # because our UserCreateSerializer doesn't show one, because it shows only created data fields.
+    # Please don't mixe up create methods of CreateAPIView like the one, and create method of serializer.
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            self.queryset.filter(username=serializer.data['username']).values('id', 'username', 'email', 'is_active'), 
+            status=status.HTTP_201_CREATED, 
+            headers=headers
+        )
 
 
 class PostsAPIView(generics.ListAPIView):
