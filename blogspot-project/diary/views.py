@@ -20,10 +20,11 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets
-from .serializers import PostsSerializer, UserSerializer
+from .serializers import PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
+from rest_framework import status
 from .permissions import OwnerOrAdmin
 
 
@@ -45,8 +46,6 @@ redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, d
 
 
 class HomeView(ListView):
-
-    
 
     paginate_by = 5
 
@@ -242,12 +241,12 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
 
 class PostDeleteView(PostUpdateView, DeleteView):
 
-    permission_denied_message = 'Access for staff or profile owner!'
+    # permission_denied_message = 'Access for staff or profile owner!'
 
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
+    # def test_func(self):
+    #     return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
 
-    model = Post
+    # model = Post
     template_name ='diary/post-delete.html'
 
     def get_success_url(self, *args, **kwargs):
@@ -276,10 +275,33 @@ class UserListAPIView(generics.ListAPIView):
     permission_classes = (permissions.IsAdminUser, )
 
 
-class PostsAPIView(generics.ListCreateAPIView):
+class CreateUserAPIView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserCreateSerializer
+
+    def perform_create(self, serializer):
+        return super().perform_create(serializer)
+
+
+
+class PostsAPIView(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostsSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+
+class PostCreateAPIView(generics.CreateAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostCreateSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+   # Override create method with return object to show all fields including the author_id,
+   # because our PostCreateSerializer doesn't show one, because the author field is hidde
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(self.queryset.filter(pk=serializer.data['id']).values(), status=status.HTTP_201_CREATED, headers=headers)
 
 
 class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
