@@ -273,20 +273,6 @@ class CreateUserAPIView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserCreateSerializer
 
-    # Override create method with return object to show also 'id' and 'is_active' fields,
-    # because our UserCreateSerializer doesn't show one, because it shows only created data fields.
-    # Please don't mixe up create methods of CreateAPIView like the one, and create method of serializer.
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            self.queryset.filter(username=serializer.data['username']).values('id', 'username', 'email', 'is_active'), 
-            status=status.HTTP_201_CREATED, 
-            headers=headers
-        )
-
 
 class PostsAPIView(generics.ListAPIView):
     queryset = Post.objects.all()
@@ -297,15 +283,6 @@ class PostCreateAPIView(generics.CreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostCreateSerializer
     permission_classes = (permissions.IsAuthenticated, )
-
-   # Override create method with return object to show all fields including the author_id,
-   # because our PostCreateSerializer doesn't show one, because the author field is hidde
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(self.queryset.filter(pk=serializer.data['id']).values(), status=status.HTTP_201_CREATED, headers=headers)
 
 
 class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):

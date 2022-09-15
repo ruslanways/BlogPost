@@ -1,3 +1,4 @@
+import copy
 from dataclasses import fields
 from email.policy import default
 from rest_framework import serializers
@@ -15,9 +16,9 @@ class PostCreateSerializer(PostsSerializer):
 
     # populate the author field autmatically to current authenticated user
     # if the author filed will be prompt explicitly - it'll be ignored
-    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    published = serializers.BooleanField(default=True)
+    author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
+    author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
+    published = serializers.BooleanField(default=True, initial=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,16 +33,18 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = 'email', 'username', 'password', 'password2'
+        fields = 'id', 'username', 'email', 'is_active', 'password', 'password2'
         extra_kwargs = {
             'password': {'style': {'input_type': 'password'} ,'write_only': True, 'validators': [validate_password]},
+            'id': {'read_only': True},
+            'is_active': {'read_only': True},
         }
     
     # add standard Django validators
     # it's important to use object level validator here, because one of the Django validators require user object
     # for comparsion fields
     def validate(self, data):
-        data_without_password2 = data
+        data_without_password2 = copy.deepcopy(data)
         del data_without_password2['password2']
         if not validate_password(password=data.get('password'), user=CustomUser(**data_without_password2)):
             return data
