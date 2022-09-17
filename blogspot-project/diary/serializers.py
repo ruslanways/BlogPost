@@ -16,8 +16,10 @@ class PostCreateSerializer(PostsSerializer):
 
     # populate the author field autmatically to current authenticated user
     # if the author filed will be prompt explicitly - it'll be ignored
-    author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
-    author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
+    # author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
+    # author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
+
+    author = serializers.ReadOnlyField(source='author.id')
     published = serializers.BooleanField(default=True, initial=True)
 
 
@@ -52,8 +54,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data['password']
         password2 = validated_data['password2']
-        print(password)
-        print(password2)
         if password != password2:
             raise serializers.ValidationError({'Password': 'Passwords must match.'})
         instance = self.Meta.model._default_manager.create_user(
