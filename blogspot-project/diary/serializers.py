@@ -16,6 +16,8 @@ class PostCreateSerializer(PostsSerializer):
 
     # populate the author field autmatically to current authenticated user
     # if the author filed will be prompt explicitly - it'll be ignored
+
+    # Example way to associate new created post with current user:
     # author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
     # author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
 
@@ -25,9 +27,13 @@ class PostCreateSerializer(PostsSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
+    # Adding posts and likes that user has to show in response api
+    post_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Post.objects.all())
+    like_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Like.objects.all())
+
     class Meta:
         model = CustomUser
-        fields = 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active'
+        fields = 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'post_set', 'like_set'
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
