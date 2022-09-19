@@ -6,7 +6,10 @@ from .models import CustomUser, Like, Post
 from django.contrib.auth.password_validation import validate_password
 
 
-class PostsSerializer(serializers.ModelSerializer):
+class PostsSerializer(serializers.HyperlinkedModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
+    author = serializers.HyperlinkedRelatedField(queryset=CustomUser.objects.all(), view_name='user-detail-api')
 
     class Meta:
         model = Post

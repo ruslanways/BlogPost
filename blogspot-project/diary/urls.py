@@ -1,7 +1,7 @@
 import imp
 from urllib import request
 from django.urls import include, path
-from .views import CreateLikeAPIView, CreateLikeView, CreateUserAPIView, HomeView, HomeViewLikeOrdered, LikeAnalytics, PostAPIDetailView, PostCreateAPIView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView, UserListAPIView, getLikes
+from .views import CreateLikeAPIView, CreateLikeView, CreateUserAPIView, HomeView, HomeViewLikeOrdered, LikeAnalytics, PostAPIDetailView, PostCreateAPIView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView, UserDetailAPIView, UserListAPIView, getLikes
 from django.contrib.auth.views import LogoutView
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -36,12 +36,13 @@ urlpatterns = [
     path('api/v1/userlist/', UserListAPIView.as_view()),
     path('api/v1/postslist/', PostsAPIView.as_view()),
     path('api/v1/postcreate/', PostCreateAPIView.as_view()),
-    path('api/v1/postdetail/<int:pk>', PostAPIDetailView.as_view()),
+    path('api/v1/postdetail/<int:pk>', PostAPIDetailView.as_view(), name='post-detail-api'),
     path('api/v1/createlike/<int:pk>', CreateLikeAPIView.as_view()),
     path('api/v1/analytics/', LikeAnalytics.as_view()),
     # path('api/v1/', include(router.urls)),
     path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/v1/createuser/', CreateUserAPIView.as_view(),)
+    path('api/v1/createuser/', CreateUserAPIView.as_view()),
+    path('api/v1/userdetail/<int:pk>', UserDetailAPIView.as_view(), name='user-detail-api'),
 ]
 
