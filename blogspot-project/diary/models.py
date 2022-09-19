@@ -27,8 +27,6 @@ class CustomUser(AbstractUser):
         super().__init__(*args, **kwargs)
 
     # alternative way to override user validator:
-    #     
-    # username_validator = MyUnicodeUsernameValidator()
     #
     # username = models.CharField(
     #     _("username"),
@@ -37,7 +35,7 @@ class CustomUser(AbstractUser):
     #     help_text=_(
     #         "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
     #     ),
-    #     validators=[username_validator],
+    #     validators=[MyUnicodeUsernameValidator()],
     #     error_messages={
     #         "unique": _("A user with that username already exists."),
     #     },
