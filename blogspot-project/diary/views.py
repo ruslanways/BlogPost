@@ -19,14 +19,14 @@ from django.db.utils import IntegrityError
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, status
 from .serializers import PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from rest_framework import status
 from .permissions import OwnerOrAdmin
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 # logger = logging.getLogger(__name__)
 
@@ -264,6 +264,7 @@ def getLikes(request, pk):
 # Rest api with DRF
 
 class UserListAPIView(generics.ListAPIView):
+    
     queryset = CustomUser.objects.all().order_by('-last_request')
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser, )
@@ -342,4 +343,28 @@ class LikeAnalytics(APIView):
 
         return Response({'Total all time likes': Like.objects.count()}, status=200)
 
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Just an attempt to implement jwt-authorization for html site.
+    The idea is to save refresh-token in cookies as most secure place
+    and access-token throw to frontend (on frontend we can cath access-token
+    in JS and store it within a variable (clousure scope) - I think it needs
+    to make login-requests using AJAX(fetch)).
+    """
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        response = Response({"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK)
+        response.set_cookie(key='refresh_token', value=serializer.validated_data["refresh"], httponly=True, samesite="Strict")
+
+        access = {'access': serializer.validated_data["access"]}
+        return render(request, template_name='diary/aftertoken.html', context=access, status=200)
 

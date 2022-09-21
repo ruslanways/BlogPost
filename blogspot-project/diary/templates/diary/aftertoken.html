@@ -1,0 +1,16 @@
+{% extends 'diary/base.html' %}
+
+{% block title %} Home after Token {% endblock %}
+
+{% block content %}
+
+<br>
+request.user: {{ request.user }}
+<br>
+request.auth: {{ request.auth }}
+<br>
+{{ access|json_script:"access_token" }}
+
+
+{% endblock %}
+
