@@ -20,13 +20,15 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets, status
-from .serializers import PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
+from .serializers import LikeAPIViewSerializer, PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from .permissions import OwnerOrAdmin
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
 
 # logger = logging.getLogger(__name__)
 
@@ -284,6 +286,8 @@ class CreateUserAPIView(generics.CreateAPIView):
 class PostsAPIView(generics.ListAPIView):
     queryset = Post.objects.all()
     serializer_class = PostsSerializer
+    filter_backends = DjangoFilterBackend, OrderingFilter
+    ordering_fields = 'id', 'updated', 'created' 
 
 
 class PostCreateAPIView(generics.CreateAPIView):
@@ -342,6 +346,18 @@ class LikeAnalytics(APIView):
             return Response({f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)}, status=200)
 
         return Response({'Total all time likes': Like.objects.count()}, status=200)
+
+
+class LikeAPIView(generics.ListAPIView):
+    queryset = Like.objects.all()
+
+    # def get_queryset(self):
+    #     return Like.objects.all().annotate(likes=Count('id')).order_by('-created__date')
+
+    serializer_class = LikeAPIViewSerializer
+    filter_backends = DjangoFilterBackend, OrderingFilter
+    filterset_fields = {'created':['gte', 'lte', 'date__range'],}
+    ordering_fields = 'id', 'created' 
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

@@ -1,7 +1,7 @@
 import imp
 from urllib import request
 from django.urls import include, path
-from .views import CreateLikeAPIView, CreateLikeView, CreateUserAPIView, HomeView, HomeViewLikeOrdered, LikeAnalytics, MyTokenObtainPairView, PostAPIDetailView, PostCreateAPIView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView, UserDetailAPIView, UserListAPIView, getLikes
+from .views import CreateLikeAPIView, CreateLikeView, CreateUserAPIView, HomeView, HomeViewLikeOrdered, LikeAPIView, LikeAnalytics, MyTokenObtainPairView, PostAPIDetailView, PostCreateAPIView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, CreatePostView, UserDetailAPIView, UserListAPIView, getLikes
 from django.contrib.auth.views import LogoutView
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -34,7 +34,7 @@ urlpatterns = [
     path('posts/<pk>/delete', PostDeleteView.as_view(), name='post-delete'),
     path('likes_count/<pk>', getLikes, name='likes_count'),
     path('api/v1/userlist/', UserListAPIView.as_view()),
-    path('api/v1/postslist/', PostsAPIView.as_view()),
+    path('api/v1/postslist/', PostsAPIView.as_view(), name='post-list-api'),
     path('api/v1/postcreate/', PostCreateAPIView.as_view()),
     path('api/v1/postdetail/<int:pk>', PostAPIDetailView.as_view(), name='post-detail-api'),
     path('api/v1/createlike/<int:pk>', CreateLikeAPIView.as_view()),
@@ -45,5 +45,6 @@ urlpatterns = [
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/createuser/', CreateUserAPIView.as_view()),
     path('api/v1/userdetail/<int:pk>', UserDetailAPIView.as_view(), name='user-detail-api'),
+    path('api/v1/likelist/', LikeAPIView.as_view(), name='like-list-api')
 ]
 

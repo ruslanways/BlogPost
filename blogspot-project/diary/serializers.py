@@ -6,14 +6,24 @@ from .models import CustomUser, Like, Post
 from django.contrib.auth.password_validation import validate_password
 
 
-class PostsSerializer(serializers.HyperlinkedModelSerializer):
+# class PostsSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
-    author = serializers.HyperlinkedRelatedField(queryset=CustomUser.objects.all(), view_name='user-detail-api')
+#     url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
+#     author = serializers.HyperlinkedRelatedField(queryset=CustomUser.objects.all(), view_name='user-detail-api')
+
+#     class Meta:
+#         model = Post
+#         fields = '__all__'
+
+
+class PostsSerializer(serializers.ModelSerializer):
+
+    author = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
 
     class Meta:
         model = Post
         fields = '__all__'
+
 
 class PostCreateSerializer(PostsSerializer):
 
@@ -73,4 +83,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class LikeAPIViewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Like
+        fields = '__all__'
 
