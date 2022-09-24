@@ -23,15 +23,11 @@ class PostsTestCase(APITestCase):
         test_post_4 = Post.objects.create(title='TestPost4', author= test_user_2, content='Some test 4 content')
         test_post_5 = Post.objects.create(title='TestPost5', author= test_user_3, content='Some test 5 content')
 
-        response = self.client.get(reverse('post-list-api'), data={'ordering': 'id'})
+        queryset = Post.objects.all()
 
-        print(response.wsgi_request)
+        response = self.client.get(reverse('post-list-api'))
 
-        serializer = PostsSerializer([test_post_2, test_post_1, test_post_3, test_post_4, test_post_5], many=True)
-
-
-        pprint(type(serializer.data))
-        pprint(type(response.data))
+        serializer = PostsSerializer(queryset, many=True)
 
         if api_settings.DEFAULT_PAGINATION_CLASS:
             self.assertEqual(serializer.data, response.data['results'])
