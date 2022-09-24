@@ -1,4 +1,5 @@
 from pprint import pprint
+from django.urls import resolve
 from .serializers import PostsSerializer
 from .models import CustomUser, Post
 from django.test import TestCase
@@ -8,6 +9,7 @@ from rest_framework.request import Request
 from rest_framework import serializers
 from rest_framework.settings import api_settings
 from unittest import mock
+from django.test.client import RequestFactory
 
 
 class PostsTestCase(APITestCase):
@@ -25,9 +27,16 @@ class PostsTestCase(APITestCase):
 
         queryset = Post.objects.all()
 
-        response = self.client.get(reverse('post-list-api'))
+        # here we use APIRequestFactory because we need an HttpRequest object to build uri for Hyperlinked serializer
+        request = APIRequestFactory().get(reverse('post-list-api'))
 
-        serializer = PostsSerializer(queryset, many=True)
+        # then we call appropriate view to test the api what server by that request - i.e. view
+        response = resolve(reverse('post-list-api')).func(request)
+
+        # or we can use client from APITestCase to mimic browser-client request
+        #response = self.client.get(reverse('post-list-api'))
+
+        serializer = PostsSerializer(queryset, many=True, context={'request': request})
 
         if api_settings.DEFAULT_PAGINATION_CLASS:
             self.assertEqual(serializer.data, response.data['results'])
