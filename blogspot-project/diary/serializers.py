@@ -9,20 +9,11 @@ from django.contrib.auth.password_validation import validate_password
 class PostsSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
-    author = serializers.HyperlinkedRelatedField(queryset=CustomUser.objects.all(), view_name='user-detail-api')
+    author = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-api')
 
     class Meta:
         model = Post
-        fields = '__all__'
-
-
-# class PostsSerializer(serializers.ModelSerializer):
-
-#     author = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
-
-#     class Meta:
-#         model = Post
-#         fields = '__all__'
+        fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published'
 
 
 class PostCreateSerializer(PostsSerializer):
@@ -38,15 +29,18 @@ class PostCreateSerializer(PostsSerializer):
     published = serializers.BooleanField(default=True, initial=True)
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     # Adding posts and likes that user has to show in response api
-    post_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Post.objects.all())
-    like_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Like.objects.all())
+    post_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='post-detail-api')
+    like_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='like-detail-api')
+
+    url = serializers.HyperlinkedIdentityField(view_name='user-detail-api')
 
     class Meta:
         model = CustomUser
-        fields = 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'post_set', 'like_set'
+        fields = 'url', 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'post_set', 'like_set'
+
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
@@ -87,4 +81,15 @@ class LikeAPIViewSerializer(serializers.Serializer):
 
     created__date = serializers.DateField()
     likes = serializers.IntegerField()
+
+
+class LikeDetailAPIViewSerializer(serializers.HyperlinkedModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField(view_name='like-detail-api')
+    user = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-api')
+    post = serializers.HyperlinkedRelatedField(read_only=True, view_name='post-detail-api')
+
+    class Meta:
+        model = Like
+        fields = 'url', 'id', 'created', 'user', 'post'
 

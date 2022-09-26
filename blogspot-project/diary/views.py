@@ -20,7 +20,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets, status
-from .serializers import LikeAPIViewSerializer, PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
+from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -275,7 +275,7 @@ class UserListAPIView(generics.ListAPIView):
 class UserDetailAPIView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAdminUser, )
+    #permission_classes = (permissions.IsAdminUser, )
 
 
 class CreateUserAPIView(generics.CreateAPIView):
@@ -354,6 +354,11 @@ class LikeAPIView(generics.ListAPIView):
     filter_backends = DjangoFilterBackend, OrderingFilter
     filterset_fields = {'created':['gte', 'lte', 'date__range'],}
     ordering_fields = 'created', 'likes'
+
+
+class LikeDetailAPIView(generics.RetrieveAPIView):
+    queryset = Like.objects.all()
+    serializer_class = LikeDetailAPIViewSerializer
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
