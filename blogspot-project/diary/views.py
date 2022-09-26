@@ -349,15 +349,11 @@ class LikeAnalytics(APIView):
 
 
 class LikeAPIView(generics.ListAPIView):
-    queryset = Like.objects.all()
-
-    # def get_queryset(self):
-    #     return Like.objects.all().annotate(likes=Count('id')).order_by('-created__date')
-
+    queryset = Like.objects.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
     serializer_class = LikeAPIViewSerializer
     filter_backends = DjangoFilterBackend, OrderingFilter
     filterset_fields = {'created':['gte', 'lte', 'date__range'],}
-    ordering_fields = 'id', 'created' 
+    ordering_fields = 'created', 'likes'
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

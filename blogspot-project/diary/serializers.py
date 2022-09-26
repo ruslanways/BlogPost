@@ -83,9 +83,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class LikeAPIViewSerializer(serializers.ModelSerializer):
+class LikeAPIViewSerializer(serializers.Serializer):
 
-    class Meta:
-        model = Like
-        fields = '__all__'
+    created__date = serializers.DateField()
+    likes = serializers.IntegerField()
 
