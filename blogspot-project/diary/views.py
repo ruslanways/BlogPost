@@ -1,5 +1,4 @@
 import copy
-
 from django.shortcuts import redirect, resolve_url
 from django.urls import reverse_lazy, reverse
 from django.views import View
@@ -20,11 +19,11 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets, status
-from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, PostCreateSerializer, PostsSerializer, UserCreateSerializer, UserSerializer
+from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, PostCreateSerializer, PostsSerializer, UserDetailSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .permissions import OwnerOrAdmin
+from .permissions import OwnerOrAdmin, ReadForAdminOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -35,16 +34,6 @@ from rest_framework.filters import OrderingFilter
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
 redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
-
-
-# class BaseView(View):
-#     def dispatch(self, request, *args, **kwargs):
-#         try: 
-#             response = super().dispatch(request, *args, **kwargs)
-#         except Exception as e:
-#             logger.error(f'Exception {type(e)}, User: {self.request.user}, Page requested: {self.request.get_full_path()}')
-#             return render(request, '400.html', status=400)
-#         return response
 
 
 class HomeView(ListView):
@@ -87,7 +76,6 @@ class PostListView(UserPassesTestMixin, HomeView, ListView):
 class PostDetailView(DetailView):
 
     template_name = 'diary/post_detail.html'
-    
     queryset = Post.objects.annotate(Count('like')).select_related('author')
 
     def get_context_data(self, **kwargs):
@@ -100,7 +88,6 @@ class PostDetailView(DetailView):
 class AuthorListView(UserPassesTestMixin, ListView):
 
     template_name = 'diary/customuser_list.html'
-
     permission_denied_message = 'Access for staff only!'
 
     def test_func(self):
@@ -135,11 +122,8 @@ class AuthorListView(UserPassesTestMixin, ListView):
 class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
 
     template_name = 'diary/customuser_detail.html'
-
     model = CustomUser
-
     paginate_by = 5
-
     permission_denied_message = 'Access for staff or profile owner!'
 
     def test_func(self):
@@ -169,7 +153,6 @@ class SignUp(CreateView):
 class Login(LoginView):
 
     template_name = 'registration/login.html'
-
     form_class = CustomAuthenticationForm
 
     def get_default_redirect_url(self):
@@ -188,7 +171,6 @@ class CreatePostView(LoginRequiredMixin, CreateView):
 
     form_class = AddPostForm
     template_name ='diary/add-post.html'
-
     success_url = '/'
 
     def form_valid(self, form):
@@ -265,22 +247,16 @@ def getLikes(request, pk):
 ###############################################################################
 # Rest api with DRF
 
-class UserListAPIView(generics.ListAPIView):
+class UserListAPIView(generics.ListCreateAPIView):
     
     queryset = CustomUser.objects.all().order_by('-last_request')
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAdminUser, )
+    permission_classes = (ReadForAdminOnly, )
 
-
-class UserDetailAPIView(generics.RetrieveAPIView):
+class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
-    #permission_classes = (permissions.IsAdminUser, )
-
-
-class CreateUserAPIView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = UserCreateSerializer
+    serializer_class = UserDetailSerializer
+    permission_classes = (OwnerOrAdmin, )
 
 
 class PostsAPIView(generics.ListAPIView):
@@ -304,11 +280,6 @@ class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostsSerializer
     # permissions: Retrieve by All, Update by Author only, Delete by Author or Admin
     permission_classes = (OwnerOrAdmin, )
-
-
-# class PostViewSet(viewsets.ModelViewSet):
-#     queryset = Post.objects.all()
-#     serializer_class = PostsSerializer
 
 
 class CreateLikeAPIView(APIView):
@@ -365,7 +336,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     """
     Just an attempt to implement jwt-authorization for html site.
     The idea is to save refresh-token in cookies as most secure place
-    and access-token throw to frontend (on frontend we can cath access-token
+    and throw access-token to frontend (on frontend we can cath access-token
     in JS and store it within a variable (clousure scope) - I think it needs
     to make login-requests using AJAX(fetch)).
     """

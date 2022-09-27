@@ -11,3 +11,11 @@ class OwnerOrAdmin(permissions.BasePermission):
             return obj.author == request.user
         return obj.author == request.user or request.user.is_staff
 
+
+class ReadForAdminOnly(permissions.BasePermission):
+    """
+    View level permission
+    """
+    def has_permission(self, request, view):
+        return request.user.is_staff if request.method not in ('POST',) else True
+
