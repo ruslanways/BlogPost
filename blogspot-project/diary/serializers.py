@@ -1,6 +1,7 @@
 import copy
 from dataclasses import fields
 from email.policy import default
+from pprint import pprint
 from rest_framework import serializers
 from .models import CustomUser, Like, Post
 from django.contrib.auth.password_validation import validate_password
@@ -9,7 +10,7 @@ from django.contrib.auth.password_validation import validate_password
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='user-detail-api')
+    url = serializers.HyperlinkedIdentityField(view_name='user-detail-update-destroy-api')
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
     class Meta:
@@ -23,8 +24,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     def validate(self, data):
         data_without_password2 = copy.deepcopy(data)
         del data_without_password2['password2']
-        if not validate_password(password=data.get('password'), user=CustomUser(**data_without_password2)):
-            return data
+        validate_password(password=data.get('password'), user=CustomUser(**data_without_password2))
+        return data
 
     def create(self, validated_data):
         password = validated_data['password']
@@ -40,25 +41,41 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='user-detail-api')
+    url = serializers.HyperlinkedIdentityField(view_name='user-detail-update-destroy-api')
     # Adding posts and likes that user has to show in response api
     post_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='post-detail-api')
     like_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='like-detail-api')
 
     class Meta:
         model = CustomUser
-        fields = 'url', 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'post_set', 'like_set'
+        fields = 'url', 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'post_set', 'like_set', 'password'
         extra_kwargs = {
             'username': {'required': False},
             'email': {'required': False},
+            'password': {'required': False, 'write_only': True}
         }
         read_only_fields = 'id', 'is_active', 'last_request', 'last_login', 'date_joined', 'is_staff'
+    
+    def validate(self, data):
+        user = CustomUser(**data) if data.get('password', False) and len(data) > 1 else self.context['obj'] 
+        if data.get('password'):
+            validate_password(password=data.get('password'), user=user)
+        return data
+
+    def update(self, instance, validated_data):
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+        password_new = validated_data.get('password', instance.password)
+        instance.set_password(password_new)
+        instance.save()
+        return instance
 
 
 class PostsSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
-    author = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-api')
+    author = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')
 
     class Meta:
         model = Post
@@ -87,7 +104,7 @@ class LikeAPIViewSerializer(serializers.Serializer):
 class LikeDetailAPIViewSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='like-detail-api')
-    user = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-api')
+    user = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')
     post = serializers.HyperlinkedRelatedField(read_only=True, view_name='post-detail-api')
 
     class Meta:

@@ -23,7 +23,7 @@ from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, Pos
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .permissions import OwnerOrAdmin, ReadForAdminOnly
+from .permissions import AuthUserOrAdmin, OwnerOrAdmin, ReadForAdminOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -245,6 +245,10 @@ def getLikes(request, pk):
     return HttpResponse(heart + " " + str(count_likes.count()))
 
 ###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
 # Rest api with DRF
 
 class UserListAPIView(generics.ListCreateAPIView):
@@ -256,7 +260,19 @@ class UserListAPIView(generics.ListCreateAPIView):
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserDetailSerializer
-    permission_classes = (OwnerOrAdmin, )
+
+    def get_serializer_context(self):
+        """
+        Add extra context 'obj' for using in serializer validator to get object.
+        """
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self,
+            'obj': self.get_object()
+        }
+   
+    permission_classes = (AuthUserOrAdmin, )
 
 
 class PostsAPIView(generics.ListAPIView):
