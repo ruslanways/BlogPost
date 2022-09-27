@@ -35,6 +35,8 @@ urlpatterns = [
 
     path('api/v1/users/', UserListAPIView.as_view(), name='users-list-create-api'),
     path('api/v1/users/<int:pk>', UserDetailAPIView.as_view(), name='user-detail-update-destroy-api'),
+    path('api/v1/login/', TokenObtainPairView.as_view(), name='login-api'),
+    path('api/v1/token-refresh/', TokenRefreshView.as_view(), name='token-refresh-api'),
 
     path('api/v1/postslist/', PostsAPIView.as_view(), name='post-list-api'),
     path('api/v1/postcreate/', PostCreateAPIView.as_view()),
@@ -43,10 +45,6 @@ urlpatterns = [
     path('api/v1/createlike/<int:pk>', CreateLikeAPIView.as_view()),
     path('api/v1/analytics/', LikeAnalytics.as_view()),
     path('api/v1/likelist/', LikeAPIView.as_view(), name='like-list-api'),
-    path('api/v1/likedetail/<int:pk>', LikeDetailAPIView.as_view(), name='like-detail-api'),
-
-    path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    #path('api/v1/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/v1/likedetail/<int:pk>', LikeDetailAPIView.as_view(), name='like-detail-api'), 
 ]
 
