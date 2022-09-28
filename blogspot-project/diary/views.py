@@ -19,15 +19,19 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets, status
-from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, PostCreateSerializer, PostsSerializer, UserDetailSerializer, UserSerializer
+from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, PostCreateSerializer, PostsSerializer, TokenRecoverySerializer, UserDetailSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from .permissions import AuthUserOrAdmin, OwnerOrAdmin, ReadForAdminOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from django.core.mail import send_mail
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.reverse import reverse as reverse_rest
 
 # logger = logging.getLogger(__name__)
 
@@ -372,3 +376,50 @@ class MyTokenObtainPairView(TokenObtainPairView):
         access = {'access': serializer.validated_data["access"]}
         return render(request, template_name='diary/aftertoken.html', context=access, status=200)
 
+
+class TokenRecoveryAPIView(generics.GenericAPIView):
+    """
+    APIView to recover token in case of user forgot his password.
+    All non-blacklisted OutstandingToken of the user gets blacklisted.
+    And the new (pair) will generate and email to user.
+    """
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = TokenRecoverySerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+
+        try:
+            user = CustomUser.objects.get(email=email) 
+        except: # DoesNotExist
+            return Response({"Oops!": "There is no user belogs mentioned emal"}, status=status.HTTP_404_NOT_FOUND)
+     
+        try:
+            out_token = OutstandingToken.objects.filter(user=user)
+            black_token = BlacklistedToken.objects.filter(token__user=user)
+            for token_to_black in out_token:
+                if not black_token.filter(token=token_to_black):
+                    BlacklistedToken.objects.create(token=token_to_black)
+        except:
+            return Response({"Oops!": "It seems you didn't have token-auth before"}, status=status.HTTP_404_NOT_FOUND)
+        
+        refresh = RefreshToken.for_user(user)
+
+        link_to_change_user = reverse_rest('user-detail-update-destroy-api', request=request, args=[user.id])
+
+        send_mail(
+                "BLOGPOST Token recovery", 
+                f"Here are your new access token expires in 5 min."
+                f"\n\n'access': {str(refresh.access_token)}\n\n"
+                "You can use it to change password by Post-request to: "
+                f"{link_to_change_user}"
+                "\n\nTherefore you could obtain new tokens pair by logging.",
+                None,
+                [user.email]
+        )
+        
+        return Response({'Recovery email send': 'Success'}, status=status.HTTP_200_OK)

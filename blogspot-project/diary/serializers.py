@@ -71,6 +71,9 @@ class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
         instance.save()
         return instance
 
+class TokenRecoverySerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=200)
+
 
 class PostsSerializer(serializers.HyperlinkedModelSerializer):
 
