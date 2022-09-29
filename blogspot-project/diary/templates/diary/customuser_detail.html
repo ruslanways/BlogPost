@@ -28,7 +28,7 @@
     <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     </a>
     <br>
-    <a href="{% url 'add-like' post.id %}" class="like">
+    <a href="{% url 'like-add' post.id %}" class="like">
         {% autoescape off %}{% like_or_unlike user post %}{% endautoescape %} {{ post.like_set.count }}
     </a>
 </p>

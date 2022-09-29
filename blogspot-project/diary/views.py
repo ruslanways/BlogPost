@@ -33,7 +33,6 @@ from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.reverse import reverse as reverse_rest
 
-# logger = logging.getLogger(__name__)
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
@@ -57,85 +56,13 @@ class HomeView(ListView):
 
 
 class HomeViewLikeOrdered(HomeView):
+    """Provide ordering by clicking on a link leads to the view."""
+
     ordering = ['-like__count', '-updated']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['ordering'] = 'liked'
-        return context
-
-
-class PostListView(UserPassesTestMixin, HomeView, ListView):
-
-    template_name = 'diary/post_list.html'
-    queryset = Post.objects.annotate(Count('like')).select_related('author')
-    # ordering = ['-updated', '-like__count'] inherit from parent class
-
-    permission_denied_message = 'Access for staff only!'
-
-    def test_func(self):
-        return self.request.user.is_staff
-
-
-class PostDetailView(DetailView):
-
-    template_name = 'diary/post_detail.html'
-    queryset = Post.objects.annotate(Count('like')).select_related('author')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
-        return context
-
-
-class AuthorListView(UserPassesTestMixin, ListView):
-
-    template_name = 'diary/customuser_list.html'
-    permission_denied_message = 'Access for staff only!'
-
-    def test_func(self):
-        return self.request.user.is_staff
-
-    def get_queryset(self):
-        """
-        implemet a user-ordering using redis
-        that contains last ordering filed to make reverse ordering by field
-        p.s. it's better to implement it on client side using js
-        """
-        if self.kwargs.get('sortfield'):
-            if '-' + self.kwargs.get('sortfield') == redis_client.get('customordering').decode():
-                redis_client.set(name='customordering', value=self.kwargs.get('sortfield'))
-            else:
-                redis_client.set(name='customordering', value='-' + self.kwargs.get('sortfield'))
-        else:
-            redis_client.mset({'customordering': 'id'})
-        return CustomUser.objects.annotate(
-            Count('post', distinct=True), 
-            Count('like', distinct=True), 
-            Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode()
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['posts'] = Post.objects.count()
-        context['likes'] = Like.objects.count()
-        return context
-
-
-class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
-
-    template_name = 'diary/customuser_detail.html'
-    model = CustomUser
-    paginate_by = 5
-    permission_denied_message = 'Access for staff or profile owner!'
-
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.id == int(self.kwargs['pk'])
-
-    def get_context_data(self, **kwargs):
-        object_list = self.get_object().post_set.all().annotate(Count('like')).order_by('-updated', '-like__count')
-        context = super().get_context_data(object_list=object_list, **kwargs)
         return context
 
 
@@ -166,12 +93,73 @@ class Login(LoginView):
 class PasswordReset(PasswordResetView):
     form_class = CustomPasswordResetForm
 
-
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     form_class = CutomSetPasswordForm
 
 
-class CreatePostView(LoginRequiredMixin, CreateView):
+class AuthorListView(UserPassesTestMixin, ListView):
+
+    template_name = 'diary/customuser_list.html'
+    permission_denied_message = 'Access for staff only!'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_queryset(self):
+        """
+        Implemet a user-ordering using redis.
+        That contains last ordering filed to make reverse ordering by field.
+        p.s. it's better to implement it on a client side using js.
+        """
+        if self.kwargs.get('sortfield'):
+            if '-' + self.kwargs.get('sortfield') == redis_client.get('customordering').decode():
+                redis_client.set(name='customordering', value=self.kwargs.get('sortfield'))
+            else:
+                redis_client.set(name='customordering', value='-' + self.kwargs.get('sortfield'))
+        else:
+            redis_client.mset({'customordering': 'id'})
+        return CustomUser.objects.annotate(
+            Count('post', distinct=True), 
+            Count('like', distinct=True), 
+            Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode()
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['posts'] = Post.objects.count()
+        context['likes'] = Like.objects.count()
+        return context
+
+
+class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
+
+    template_name = 'diary/customuser_detail.html'
+    model = CustomUser
+    paginate_by = 5
+    permission_denied_message = 'Access for staff or profile owner only!'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.id == self.kwargs['pk']
+
+    def get_context_data(self, **kwargs):
+        object_list = self.get_object().post_set.all().annotate(Count('like')).order_by('-updated', '-like__count')
+        context = super().get_context_data(object_list=object_list, **kwargs)
+        return context
+
+
+class PostListView(UserPassesTestMixin, HomeView, ListView):
+
+    template_name = 'diary/post_list.html'
+    queryset = Post.objects.annotate(Count('like')).select_related('author')
+    # ordering = ['-updated', '-like__count'] inherit from parent class
+
+    permission_denied_message = 'Access for staff only!'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+
+class PostCreateView(LoginRequiredMixin, CreateView):
 
     form_class = AddPostForm
     template_name ='diary/add-post.html'
@@ -182,7 +170,43 @@ class CreatePostView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class CreateLikeView(LoginRequiredMixin, View):
+class PostDetailView(DetailView):
+
+    template_name = 'diary/post_detail.html'
+    queryset = Post.objects.annotate(Count('like')).select_related('author')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+        return context
+
+
+class PostUpdateView(UserPassesTestMixin, UpdateView):
+
+    permission_denied_message = 'Access for staff or profile owner!'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
+
+    model = Post
+    form_class = UpdatePostForm
+    template_name ='diary/post-update.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class PostDeleteView(PostUpdateView, DeleteView):
+
+    template_name ='diary/post-delete.html'
+
+    def get_success_url(self, *args, **kwargs):
+        return reverse_lazy('author-detail', kwargs={'pk': f'{self.get_object().author_id}'})
+
+
+class LikeCreateView(LoginRequiredMixin, View):
 
     redirect_field_name = '/'
 
@@ -211,35 +235,11 @@ class CreateLikeView(LoginRequiredMixin, View):
         return JsonResponse({reply: model_to_dict(like)}, status=status)
 
 
-class PostUpdateView(UserPassesTestMixin, UpdateView):
-
-    permission_denied_message = 'Access for staff or profile owner!'
-
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
-
-    model = Post
-    form_class = UpdatePostForm
-    template_name ='diary/post-update.html'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-
-class PostDeleteView(PostUpdateView, DeleteView):
-
-    template_name ='diary/post-delete.html'
-
-    def get_success_url(self, *args, **kwargs):
-        return reverse_lazy('author-detail', kwargs={'pk': f'{self.get_object().author_id}'})
-
-
-def getLikes(request, pk):
+def getLikes(request, post_id):
     """
     View to help update likes for updateLike function in fetch.js
     """
-    post = Post.objects.get(pk=pk)
+    post = Post.objects.get(pk=post_id)
     count_likes = post.like_set.all()
 
     if request.user.is_authenticated:
@@ -248,18 +248,17 @@ def getLikes(request, pk):
         heart = "&#9825;"
     return HttpResponse(heart + " " + str(count_likes.count()))
 
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
+
+#######################################################################################################################
 # Rest api with DRF
+
 
 class UserListAPIView(generics.ListCreateAPIView):
     
     queryset = CustomUser.objects.all().order_by('-last_request')
     serializer_class = UserSerializer
     permission_classes = (ReadForAdminOnly, )
+
 
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()

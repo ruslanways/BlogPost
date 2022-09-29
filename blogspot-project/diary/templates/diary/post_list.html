@@ -23,9 +23,9 @@
     <br>
 
     {% if user.is_authenticated and post in liked_by_user %}
-    <a href="{% url 'add-like' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
+    <a href="{% url 'like-add' post.id %}" class="like">&#10084; {{ post.like__count }}</a>
     {% else %}
-    <a href="{% url 'add-like' post.id %}" class="like">&#9825; {{ post.like__count }}</a>
+    <a href="{% url 'like-add' post.id %}" class="like">&#9825; {{ post.like__count }}</a>
     {% endif %}
 
 </p>
