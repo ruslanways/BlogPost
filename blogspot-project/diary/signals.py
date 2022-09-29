@@ -14,5 +14,6 @@ def save_post(sender, instance, **kwargs):
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
+    pass
     print(f'user {user.username} logged in at {datetime.datetime.now()}')
 

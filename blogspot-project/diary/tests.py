@@ -1,9 +1,10 @@
 from pprint import pprint
-from .serializers import PostsSerializer
+from .serializers import PostSerializer
 from .models import CustomUser, Post
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 from rest_framework.settings import api_settings
+from django.db.models import Count
 
 
 
@@ -26,11 +27,11 @@ class PostsTestCase(APITestCase):
         test_post_10 = Post.objects.create(title='TestPost10', author= test_user_2, content='Some test 10 content')
         test_post_11 = Post.objects.create(title='TestPost11', author= test_user_3, content='Some test 11 content')
 
-        queryset = Post.objects.all()
+        queryset = Post.objects.exclude(published=False).annotate(likes=Count('like')).order_by('-updated')
 
         response = self.client.get(reverse('post-list-api'))
 
-        serializer = PostsSerializer(queryset, many=True, context={'request': response.wsgi_request})
+        serializer = PostSerializer(queryset, many=True, context={'request': response.wsgi_request})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(serializer.data[:api_settings.PAGE_SIZE], response.data['results'])

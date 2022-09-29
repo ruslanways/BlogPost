@@ -19,11 +19,11 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 import logging
 from rest_framework import generics, viewsets, status
-from .serializers import LikeAPIViewSerializer, LikeDetailAPIViewSerializer, PostCreateSerializer, PostsSerializer, TokenRecoverySerializer, UserDetailSerializer, UserSerializer
+from .serializers import LikeSerializer, LikeDetailSerializer, PostDetailSerializer, PostSerializer, TokenRecoverySerializer, UserDetailSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .permissions import AuthUserOrAdmin, OwnerOrAdmin, ReadForAdminOnly
+from .permissions import OwnerOrAdmin, OwnerOrAdminOrReadOnly, ReadForAdminOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -266,6 +266,7 @@ class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_serializer_context(self):
         """
+        Override parent's method.
         Add extra context 'obj' for using in serializer validator to get object.
         """
         return {
@@ -275,33 +276,51 @@ class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             'obj': self.get_object()
         }
    
-    permission_classes = (AuthUserOrAdmin, )
+    permission_classes = (OwnerOrAdmin, )
 
 
-class PostsAPIView(generics.ListAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostsSerializer
+class PostAPIView(generics.ListCreateAPIView):
+    serializer_class = PostSerializer
     filter_backends = DjangoFilterBackend, OrderingFilter
-    ordering_fields = 'id', 'updated', 'created' 
+    ordering_fields = 'id', 'updated', 'created'
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
-
-class PostCreateAPIView(generics.CreateAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostCreateSerializer
-    permission_classes = (permissions.IsAuthenticated, )
+    def get_queryset(self):
+        return Post.objects.exclude(published=False).annotate(likes=Count('like')).order_by('-updated')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
 
-class PostAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostsSerializer
+    serializer_class = PostDetailSerializer
     # permissions: Retrieve by All, Update by Author only, Delete by Author or Admin
-    permission_classes = (OwnerOrAdmin, )
+    permission_classes = (OwnerOrAdminOrReadOnly, )
+
+    def retrieve(self, request, *args, **kwargs):
+        """Make visible only published posts if user is not owner or admin."""
+        instance = self.get_object()
+        if not instance.published and instance.author != request.user and not request.user.is_staff:
+            return Response({'Forbidden': "Unpublished post can be retrieved by owner only!"}, status=403)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
-class CreateLikeAPIView(APIView):
+class LikeAPIView(generics.ListAPIView):
+    queryset = Like.objects.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
+    serializer_class = LikeSerializer
+    filter_backends = DjangoFilterBackend, OrderingFilter
+    filterset_fields = {'created':['gte', 'lte', 'date__range'],}
+    ordering_fields = 'created', 'likes'
+
+
+class LikeDetailAPIView(generics.RetrieveAPIView):
+    queryset = Like.objects.all()
+    serializer_class = LikeDetailSerializer
+
+
+class LikeCreateAPIView(APIView):
 
     permission_classes = (permissions.IsAuthenticated, )
 
@@ -322,7 +341,7 @@ class CreateLikeAPIView(APIView):
         return Response({reply: model_to_dict(like)}, status=status)
 
 
-class LikeAnalytics(APIView):
+class LikeAnalyticsAPIView(APIView):
 
     def get(self, *args, **kwargs):
 
@@ -336,44 +355,6 @@ class LikeAnalytics(APIView):
             return Response({f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)}, status=200)
 
         return Response({'Total all time likes': Like.objects.count()}, status=200)
-
-
-class LikeAPIView(generics.ListAPIView):
-    queryset = Like.objects.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
-    serializer_class = LikeAPIViewSerializer
-    filter_backends = DjangoFilterBackend, OrderingFilter
-    filterset_fields = {'created':['gte', 'lte', 'date__range'],}
-    ordering_fields = 'created', 'likes'
-
-
-class LikeDetailAPIView(generics.RetrieveAPIView):
-    queryset = Like.objects.all()
-    serializer_class = LikeDetailAPIViewSerializer
-
-
-class MyTokenObtainPairView(TokenObtainPairView):
-    """
-    Just an attempt to implement jwt-authorization for html site.
-    The idea is to save refresh-token in cookies as most secure place
-    and throw access-token to frontend (on frontend we can cath access-token
-    in JS and store it within a variable (clousure scope) - I think it needs
-    to make login-requests using AJAX(fetch)).
-    """
-
-    def post(self, request, *args, **kwargs):
-
-        serializer = self.get_serializer(data=request.data)
-
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as e:
-            raise InvalidToken(e.args[0])
-
-        response = Response({"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK)
-        response.set_cookie(key='refresh_token', value=serializer.validated_data["refresh"], httponly=True, samesite="Strict")
-
-        access = {'access': serializer.validated_data["access"]}
-        return render(request, template_name='diary/aftertoken.html', context=access, status=200)
 
 
 class TokenRecoveryAPIView(generics.GenericAPIView):
@@ -422,3 +403,29 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
         )
         
         return Response({'Recovery email send': 'Success'}, status=status.HTTP_200_OK)
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Just an attempt to implement jwt-authorization for html site.
+    The idea is to save refresh-token in cookies as most secure place
+    and throw access-token to frontend (on frontend we can cath access-token
+    in JS and store it within a variable (clousure scope) - I think it needs
+    to make login-requests using AJAX(fetch)).
+    """
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        response = Response({"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK)
+        response.set_cookie(key='refresh_token', value=serializer.validated_data["refresh"], httponly=True, samesite="Strict")
+
+        access = {'access': serializer.validated_data["access"]}
+        return render(request, template_name='diary/aftertoken.html', context=access, status=200)
+

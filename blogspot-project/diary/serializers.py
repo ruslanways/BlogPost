@@ -1,6 +1,4 @@
 import copy
-from dataclasses import fields
-from email.policy import default
 from pprint import pprint
 from rest_framework import serializers
 from .models import CustomUser, Like, Post
@@ -65,9 +63,9 @@ class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
-        instance.save()
-        password_new = validated_data.get('password', instance.password)
-        instance.set_password(password_new)
+        password_new = validated_data.get('password')
+        if password_new:
+            instance.set_password(password_new)
         instance.save()
         return instance
 
@@ -75,36 +73,38 @@ class TokenRecoverySerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=200)
 
 
-class PostsSerializer(serializers.HyperlinkedModelSerializer):
+class PostSerializer(serializers.HyperlinkedModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
+    published = serializers.BooleanField(write_only=True, required=False, default=True, initial=True)
+    author = serializers.HyperlinkedRelatedField(read_only=True, source='author.id', view_name='user-detail-update-destroy-api')
+    # Example way to associate new created post with current user:
+    # author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
+    # author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
+    likes = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published', 'likes'
+
+
+class PostDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
     author = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')
 
     class Meta:
         model = Post
-        fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published'
+        fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published', 'like_set'
 
 
-class PostCreateSerializer(PostsSerializer):
-
-    # populate the author field autmatically to current authenticated user
-    # if the author filed will be prompt explicitly - it'll be ignored
-
-    # Example way to associate new created post with current user:
-    # author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
-    # author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
-
-    author = serializers.ReadOnlyField(source='author.id')
-    published = serializers.BooleanField(default=True, initial=True)
-
-
-class LikeAPIViewSerializer(serializers.Serializer):
+class LikeSerializer(serializers.Serializer):
 
     created__date = serializers.DateField()
     likes = serializers.IntegerField()
 
 
-class LikeDetailAPIViewSerializer(serializers.HyperlinkedModelSerializer):
+class LikeDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='like-detail-api')
     user = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')

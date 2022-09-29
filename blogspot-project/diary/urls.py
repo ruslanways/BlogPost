@@ -1,7 +1,7 @@
 import imp
 from urllib import request
 from django.urls import include, path
-from .views import CreateLikeAPIView, HomeView, HomeViewLikeOrdered, LikeAPIView, LikeAnalytics, LikeCreateView, LikeDetailAPIView, MyTokenObtainPairView, PostAPIDetailView, PostCreateAPIView, PostCreateView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostsAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, TokenRecoveryAPIView, UserDetailAPIView, UserListAPIView, getLikes
+from .views import LikeCreateAPIView, HomeView, HomeViewLikeOrdered, LikeAPIView, LikeAnalyticsAPIView, LikeCreateView, LikeDetailAPIView, MyTokenObtainPairView, PostDetailAPIView, PostCreateView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, TokenRecoveryAPIView, UserDetailAPIView, UserListAPIView, getLikes
 from django.contrib.auth.views import LogoutView
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -45,13 +45,12 @@ urlpatterns = [
     path('api/v1/token-recovery/', TokenRecoveryAPIView.as_view(), name='token-recovery-api'),
 
 
-    path('api/v1/postslist/', PostsAPIView.as_view(), name='post-list-api'),
-    path('api/v1/postcreate/', PostCreateAPIView.as_view()),
-    path('api/v1/postdetail/<int:pk>', PostAPIDetailView.as_view(), name='post-detail-api'),
+    path('api/v1/postslist/', PostAPIView.as_view(), name='post-list-api'),
+    path('api/v1/postdetail/<int:pk>', PostDetailAPIView.as_view(), name='post-detail-api'),
 
 
-    path('api/v1/createlike/<int:pk>', CreateLikeAPIView.as_view()),
-    path('api/v1/analytics/', LikeAnalytics.as_view()),
+    path('api/v1/createlike/<int:pk>', LikeCreateAPIView.as_view()),
+    path('api/v1/analytics/', LikeAnalyticsAPIView.as_view()),
     path('api/v1/likelist/', LikeAPIView.as_view(), name='like-list-api'),
     path('api/v1/likedetail/<int:pk>', LikeDetailAPIView.as_view(), name='like-detail-api'), 
 ]
