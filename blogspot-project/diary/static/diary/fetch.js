@@ -6,8 +6,8 @@ by making GET-requests to Django CreateLikeView
 const likes = document.querySelectorAll(".like");
 
 if (document.getElementById("user")) {
-  likes.forEach((like) => {
-    like.addEventListener("click", async function (evt) {
+  likes.forEach(like => {
+    like.addEventListener("click", async function(evt) {
       evt.preventDefault();
       await fetch(this.getAttribute("href"));
       let content = this.innerHTML.trim().split(" ");
