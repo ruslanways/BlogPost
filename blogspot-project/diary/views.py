@@ -302,7 +302,7 @@ class LikeDetailAPIView(generics.RetrieveAPIView):
     serializer_class = LikeDetailSerializer
 
 
-class LikeCreateAPIView(APIView):
+class LikeCreateDestroyAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, *args, **kwargs):
@@ -320,23 +320,6 @@ class LikeCreateAPIView(APIView):
             return Response({'status': "Post doesn't exist"}, status=404)
 
         return Response({reply: model_to_dict(like)}, status=status)
-
-
-class LikeAnalyticsAPIView(APIView):
-
-    def get(self, *args, **kwargs):
-        date_from = self.request.GET.get('date_from')
-        date_to = self.request.GET.get('date_to')
-
-        if date_from and date_to:
-            likes = Like.objects.filter(created__date__range=[date_from, date_to])
-            total_likes = len(likes)
-            day_likes = likes.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
-            return Response(
-                {f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)},
-                status=200)
-
-        return Response({'Total all time likes': Like.objects.count()}, status=200)
 
 
 class TokenRecoveryAPIView(generics.GenericAPIView):

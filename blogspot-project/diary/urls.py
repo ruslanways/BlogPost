@@ -1,7 +1,7 @@
 import imp
 from urllib import request
 from django.urls import include, path
-from .views import LikeCreateAPIView, HomeView, HomeViewLikeOrdered, LikeAPIView, LikeAnalyticsAPIView, LikeCreateView, LikeDetailAPIView, MyTokenObtainPairView, PostDetailAPIView, PostCreateView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, TokenRecoveryAPIView, UserDetailAPIView, UserListAPIView, getLikes
+from .views import LikeCreateDestroyAPIView, HomeView, HomeViewLikeOrdered, LikeAPIView, LikeCreateView, LikeDetailAPIView, MyTokenObtainPairView, PostDetailAPIView, PostCreateView, PostDeleteView, PostDetailView, AuthorDetailView, AuthorListView, PostListView, PostUpdateView, PostAPIView, SignUp, Login, PasswordReset, CustomPasswordResetConfirmView, TokenRecoveryAPIView, UserDetailAPIView, UserListAPIView, getLikes
 from django.contrib.auth.views import LogoutView
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -49,8 +49,7 @@ urlpatterns = [
     path('api/v1/postdetail/<int:pk>', PostDetailAPIView.as_view(), name='post-detail-api'),
 
 
-    path('api/v1/createlike/<int:pk>', LikeCreateAPIView.as_view()),
-    path('api/v1/analytics/', LikeAnalyticsAPIView.as_view()),
+    path('api/v1/createlike/<int:pk>', LikeCreateDestroyAPIView.as_view()),
     path('api/v1/likelist/', LikeAPIView.as_view(), name='like-list-api'),
     path('api/v1/likedetail/<int:pk>', LikeDetailAPIView.as_view(), name='like-detail-api'), 
 ]
