@@ -200,9 +200,6 @@ class PostDeleteView(PostUpdateView, DeleteView):
 class LikeCreateView(LoginRequiredMixin, View):
     redirect_field_name = '/'
 
-    # def get_redirect_field_name(self):
-    #     reverse_lazy('post-detail', kwargs={'pk': self.kwargs['pk']})
-
     http_method_names = ['get']
 
     def get(self, *args, **kwargs):
@@ -218,10 +215,6 @@ class LikeCreateView(LoginRequiredMixin, View):
             status = 204
         except Post.DoesNotExist:
             raise Http404
-        # try:
-        #     return redirect(f"{self.request.META['HTTP_REFERER']}#{self.kwargs['pk']}")
-        # except KeyError:
-        #     return redirect('post-detail', self.kwargs['pk'])
         return JsonResponse({reply: model_to_dict(like)}, status=status)
 
 
@@ -232,8 +225,8 @@ def getLikes(request, post_id):
     post = Post.objects.get(pk=post_id)
     count_likes = post.like_set.all()
 
-    if request.user.is_authenticated:
-        heart = "&#10084;" if request.user.like_set.all() & count_likes else "&#9825;"
+    if request.user.is_authenticated and (request.user.like_set.all() & count_likes):
+        heart = "&#10084;"
     else:
         heart = "&#9825;"
     return HttpResponse(heart + " " + str(count_likes.count()))
