@@ -11,15 +11,16 @@ from django.contrib.auth import login
 from .models import Post, CustomUser, Like
 from django.db.models import Count, Prefetch, F
 from django.forms.models import model_to_dict
-from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, CutomSetPasswordForm, UpdatePostForm
+from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, \
+    CutomSetPasswordForm, UpdatePostForm
 from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
-import logging
-from rest_framework import generics, viewsets, status
-from .serializers import LikeSerializer, LikeDetailSerializer, PostDetailSerializer, PostSerializer, TokenRecoverySerializer, UserDetailSerializer, UserSerializer
+from rest_framework import generics, status
+from .serializers import LikeSerializer, LikeDetailSerializer, PostDetailSerializer, PostSerializer, \
+    TokenRecoverySerializer, UserDetailSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -33,14 +34,12 @@ from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.reverse import reverse as reverse_rest
 
-
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
 redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
 
 
 class HomeView(ListView):
-
     paginate_by = 5
 
     template_name = 'diary/index.html'
@@ -67,10 +66,10 @@ class HomeViewLikeOrdered(HomeView):
 
 
 class SignUp(CreateView):
-
     form_class = CustomUserCreationForm
-    template_name ='registration/signup.html'
-    #success_url = reverse_lazy('home')
+    template_name = 'registration/signup.html'
+
+    # success_url = reverse_lazy('home')
 
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
@@ -78,11 +77,10 @@ class SignUp(CreateView):
         """make an authorization after signingup"""
         login(self.request, self.object)
         """and redirect to user profile with user.pk"""
-        return redirect('author-detail',  self.object.pk)
+        return redirect('author-detail', self.object.pk)
 
 
 class Login(LoginView):
-
     template_name = 'registration/login.html'
     form_class = CustomAuthenticationForm
 
@@ -93,12 +91,12 @@ class Login(LoginView):
 class PasswordReset(PasswordResetView):
     form_class = CustomPasswordResetForm
 
+
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     form_class = CutomSetPasswordForm
 
 
 class AuthorListView(UserPassesTestMixin, ListView):
-
     template_name = 'diary/customuser_list.html'
     permission_denied_message = 'Access for staff only!'
 
@@ -119,10 +117,9 @@ class AuthorListView(UserPassesTestMixin, ListView):
         else:
             redis_client.mset({'customordering': 'id'})
         return CustomUser.objects.annotate(
-            Count('post', distinct=True), 
-            Count('like', distinct=True), 
-            Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode()
-        )
+            Count('post', distinct=True),
+            Count('like', distinct=True),
+            Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -132,7 +129,6 @@ class AuthorListView(UserPassesTestMixin, ListView):
 
 
 class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
-
     template_name = 'diary/customuser_detail.html'
     model = CustomUser
     paginate_by = 5
@@ -148,7 +144,6 @@ class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
 
 
 class PostListView(UserPassesTestMixin, HomeView, ListView):
-
     template_name = 'diary/post_list.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author')
     # ordering = ['-updated', '-like__count'] inherit from parent class
@@ -160,9 +155,8 @@ class PostListView(UserPassesTestMixin, HomeView, ListView):
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
-
     form_class = AddPostForm
-    template_name ='diary/add-post.html'
+    template_name = 'diary/add-post.html'
     success_url = '/'
 
     def form_valid(self, form):
@@ -171,7 +165,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostDetailView(DetailView):
-
     template_name = 'diary/post_detail.html'
     queryset = Post.objects.annotate(Count('like')).select_related('author')
 
@@ -183,7 +176,6 @@ class PostDetailView(DetailView):
 
 
 class PostUpdateView(UserPassesTestMixin, UpdateView):
-
     permission_denied_message = 'Access for staff or profile owner!'
 
     def test_func(self):
@@ -191,7 +183,7 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
 
     model = Post
     form_class = UpdatePostForm
-    template_name ='diary/post-update.html'
+    template_name = 'diary/post-update.html'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -199,20 +191,18 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
 
 
 class PostDeleteView(PostUpdateView, DeleteView):
-
-    template_name ='diary/post-delete.html'
+    template_name = 'diary/post-delete.html'
 
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('author-detail', kwargs={'pk': f'{self.get_object().author_id}'})
 
 
 class LikeCreateView(LoginRequiredMixin, View):
-
     redirect_field_name = '/'
 
     # def get_redirect_field_name(self):
     #     reverse_lazy('post-detail', kwargs={'pk': self.kwargs['pk']})
-    
+
     http_method_names = ['get']
 
     def get(self, *args, **kwargs):
@@ -244,7 +234,7 @@ def getLikes(request, post_id):
 
     if request.user.is_authenticated:
         heart = "&#10084;" if request.user.like_set.all() & count_likes else "&#9825;"
-    else: 
+    else:
         heart = "&#9825;"
     return HttpResponse(heart + " " + str(count_likes.count()))
 
@@ -254,10 +244,9 @@ def getLikes(request, post_id):
 
 
 class UserListAPIView(generics.ListCreateAPIView):
-    
     queryset = CustomUser.objects.all().order_by('-last_request')
     serializer_class = UserSerializer
-    permission_classes = (ReadForAdminOnly, )
+    permission_classes = (ReadForAdminOnly,)
 
 
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -275,15 +264,15 @@ class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             'view': self,
             'obj': self.get_object()
         }
-   
-    permission_classes = (OwnerOrAdmin, )
+
+    permission_classes = (OwnerOrAdmin,)
 
 
 class PostAPIView(generics.ListCreateAPIView):
     serializer_class = PostSerializer
     filter_backends = DjangoFilterBackend, OrderingFilter
     ordering_fields = 'id', 'updated', 'created'
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         return Post.objects.exclude(published=False).annotate(likes=Count('like')).order_by('-updated')
@@ -296,7 +285,7 @@ class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostDetailSerializer
     # permissions: Retrieve by All, Update by Author only, Delete by Author or Admin
-    permission_classes = (OwnerOrAdminOrReadOnly, )
+    permission_classes = (OwnerOrAdminOrReadOnly,)
 
     def retrieve(self, request, *args, **kwargs):
         """Make visible only published posts if user is not owner or admin."""
@@ -311,7 +300,7 @@ class LikeAPIView(generics.ListAPIView):
     queryset = Like.objects.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
     serializer_class = LikeSerializer
     filter_backends = DjangoFilterBackend, OrderingFilter
-    filterset_fields = {'created':['gte', 'lte', 'date__range'],}
+    filterset_fields = {'created': ['gte', 'lte', 'date__range'], }
     ordering_fields = 'created', 'likes'
 
 
@@ -321,8 +310,7 @@ class LikeDetailAPIView(generics.RetrieveAPIView):
 
 
 class LikeCreateAPIView(APIView):
-
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, *args, **kwargs):
         try:
@@ -344,7 +332,6 @@ class LikeCreateAPIView(APIView):
 class LikeAnalyticsAPIView(APIView):
 
     def get(self, *args, **kwargs):
-
         date_from = self.request.GET.get('date_from')
         date_to = self.request.GET.get('date_to')
 
@@ -352,7 +339,9 @@ class LikeAnalyticsAPIView(APIView):
             likes = Like.objects.filter(created__date__range=[date_from, date_to])
             total_likes = len(likes)
             day_likes = likes.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
-            return Response({f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)}, status=200)
+            return Response(
+                {f'Total likes for period from {date_from} to {date_to}': total_likes, 'Likes by day': list(day_likes)},
+                status=200)
 
         return Response({'Total all time likes': Like.objects.count()}, status=200)
 
@@ -374,34 +363,36 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
         email = serializer.validated_data['email']
 
         try:
-            user = CustomUser.objects.get(email=email) 
-        except: # DoesNotExist
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
             return Response({"Oops!": "There is no user belogs mentioned emal"}, status=status.HTTP_404_NOT_FOUND)
-     
-        try:
-            out_token = OutstandingToken.objects.filter(user=user)
-            black_token = BlacklistedToken.objects.filter(token__user=user)
-            for token_to_black in out_token:
-                if not black_token.filter(token=token_to_black):
-                    BlacklistedToken.objects.create(token=token_to_black)
-        except:
+
+        out_token = OutstandingToken.objects.filter(user=user)
+
+        if not out_token:
             return Response({"Oops!": "It seems you didn't have token-auth before"}, status=status.HTTP_404_NOT_FOUND)
-        
+
+        black_token = BlacklistedToken.objects.filter(token__user=user)
+
+        for token_to_black in out_token:
+            if not black_token.filter(token=token_to_black):
+                BlacklistedToken.objects.create(token=token_to_black)
+
         refresh = RefreshToken.for_user(user)
 
         link_to_change_user = reverse_rest('user-detail-update-destroy-api', request=request, args=[user.id])
 
         send_mail(
-                "BLOGPOST Token recovery", 
-                f"Here are your new access token expires in 5 min."
-                f"\n\n'access': {str(refresh.access_token)}\n\n"
-                "You can use it to change password by Post-request to: "
-                f"{link_to_change_user}"
-                "\n\nTherefore you could obtain new tokens pair by logging.",
-                None,
-                [user.email]
+            "BLOGPOST Token recovery",
+            f"Here are your new access token expires in 5 min."
+            f"\n\n'access': {str(refresh.access_token)}\n\n"
+            "You can use it to change password by Post-request to: "
+            f"{link_to_change_user}"
+            "\n\nTherefore you could obtain new tokens pair by logging.",
+            None,
+            [user.email]
         )
-        
+
         return Response({'Recovery email send': 'Success'}, status=status.HTTP_200_OK)
 
 
@@ -424,8 +415,8 @@ class MyTokenObtainPairView(TokenObtainPairView):
             raise InvalidToken(e.args[0])
 
         response = Response({"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK)
-        response.set_cookie(key='refresh_token', value=serializer.validated_data["refresh"], httponly=True, samesite="Strict")
+        response.set_cookie(key='refresh_token', value=serializer.validated_data["refresh"], httponly=True,
+                            samesite="Strict")
 
         access = {'access': serializer.validated_data["access"]}
         return render(request, template_name='diary/aftertoken.html', context=access, status=200)
-
