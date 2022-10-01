@@ -331,6 +331,9 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
 
+        if len(request.data) != 1 or not request.data.get('email'):
+            return Response({'error': 'please post email only'}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = TokenRecoverySerializer(data=request.data)
 
         if not serializer.is_valid():
