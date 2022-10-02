@@ -307,11 +307,11 @@ class LikeCreateDestroyAPIView(APIView):
 
     def get(self, *args, **kwargs):
         try:
-            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
             reply = 'like created'
             status = 201
         except IntegrityError:
-            like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
             like = copy.deepcopy(like_to_delete)
             like_to_delete.delete()
             reply = 'like deleted'
