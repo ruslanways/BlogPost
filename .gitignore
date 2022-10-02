@@ -142,3 +142,6 @@ media/
 runserver
 mm
 
+# PyCharm staff
+.idea/
+
