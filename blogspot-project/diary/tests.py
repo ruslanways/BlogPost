@@ -1,5 +1,6 @@
 from pprint import pprint
-from .serializers import PostSerializer
+import random
+from .serializers import PostSerializer, PostDetailSerializer
 from .models import CustomUser, Post
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
@@ -142,14 +143,14 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {access_token}",
         )
 
-        serializer = PostSerializer(
+        serializer1 = PostSerializer(
             Post.objects.get(title="New Test Post 1"),
             context={"request": response1.wsgi_request},
         )
 
         self.assertEqual(response1.status_code, 201)
         self.assertTrue(Post.objects.get(title="New Test Post 1"))
-        self.assertEqual(serializer.data, response1.data)
+        self.assertEqual(serializer1.data, response1.data)
 
         self.assertEqual(response2.status_code, 400)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, title="New Test Post 2")
@@ -168,7 +169,20 @@ class PostAPITestCase(APITestCase):
         self.assertEqual(Post.objects.get(title="New Test Post 6").published, False)
 
     def test_detail(self):
-        pass
+
+        # Choose a random Post
+        post_id = random.choice(Post.objects.all().values('id'))['id']
+        url = (reverse("post-detail-api", args=[post_id]))
+        print(post_id)
+        print(url)
+        response = self.client.get(url)
+
+        serializer = PostDetailSerializer(
+            Post.objects.get(id=post_id),
+            context={"request": response.wsgi_request},
+        )
+
+        self.assertEqual(serializer.data, response.data)
 
     def test_update(self):
         pass
