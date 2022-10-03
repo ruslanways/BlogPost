@@ -1,16 +1,23 @@
 from pprint import pprint
 import random
-from .serializers import PostSerializer, PostDetailSerializer
-from .models import CustomUser, Post
+from unittest import skip
+from .serializers import (
+    PostSerializer,
+    PostDetailSerializer,
+    LikeSerializer,
+    LikeDetailSerializer,
+)
+from .models import CustomUser, Post, Like
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 from rest_framework.settings import api_settings
 from django.db.models import Count
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db.utils import IntegrityError
+from django.db import transaction
 
 
 class PostAPITestCase(APITestCase):
-   
     @classmethod
     def setUpTestData(cls):
 
@@ -94,7 +101,53 @@ class PostAPITestCase(APITestCase):
         cls.access_token_user2 = RefreshToken.for_user(cls.test_user_2).access_token
         cls.access_token_user3 = RefreshToken.for_user(cls.test_user_3).access_token
 
-    def test_list(self):
+        Like.objects.create(user=cls.test_user_1, post=cls.test_post_1)
+        Like.objects.create(user=cls.test_user_1, post=cls.test_post_3)
+        Like.objects.create(user=cls.test_user_1, post=cls.test_post_5)
+        Like.objects.create(user=cls.test_user_1, post=cls.test_post_9)
+        Like.objects.create(user=cls.test_user_1, post=cls.test_post_7)
+        Like.objects.create(user=cls.test_user_1, post=cls.test_post_2)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_1)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_2)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_3)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_8)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_10)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_11)
+        Like.objects.create(user=cls.test_user_2, post=cls.test_post_5)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_11)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_3)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_2)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_1)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_4)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_7)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_8)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_9)
+        Like.objects.create(user=cls.test_user_3, post=cls.test_post_6)
+
+        cls.test_like1 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_1)
+        cls.test_like2 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_3)
+        cls.test_like3 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_5)
+        cls.test_like4 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_9)
+        cls.test_like5 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_7)
+        cls.test_like6 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_2)
+        cls.test_like7 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_1)
+        cls.test_like8 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_2)
+        cls.test_like9 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_3)
+        cls.test_like10 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_8)
+        cls.test_like11 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_10)
+        cls.test_like12 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_11)
+        cls.test_like13 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_5)
+        cls.test_like14 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_11)
+        cls.test_like15 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_3)
+        cls.test_like16 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_2)
+        cls.test_like17 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_1)
+        cls.test_like18 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_4)
+        cls.test_like19 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_7)
+        cls.test_like20 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_8)
+        cls.test_like21 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_9)
+        cls.test_like22 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_6)
+
+    def test_post_list(self):
 
         queryset = (
             Post.objects.exclude(published=False)
@@ -113,7 +166,7 @@ class PostAPITestCase(APITestCase):
             serializer.data[: api_settings.PAGE_SIZE], response.data["results"]
         )
 
-    def test_create(self):
+    def test_post_create(self):
 
         # We just need to include Authorization header with our post-request below.
         # We also can use .credentials to set Authorization header with all requests:
@@ -198,7 +251,7 @@ class PostAPITestCase(APITestCase):
         self.assertEqual(response6.status_code, 201)
         self.assertEqual(Post.objects.get(title="New Test Post 6").published, False)
 
-    def test_detail(self):
+    def test_post_detail(self):
 
         # It's good idea to make a random choosing of Post object,
         # but we need to test both Post object with published Ture and False.
@@ -238,7 +291,7 @@ class PostAPITestCase(APITestCase):
         self.assertEqual(response3.status_code, 200)
         self.assertEqual(serializer3.data, response3.data)
 
-    def test_update(self):
+    def test_post_update(self):
         """
         IMHO.
         It's worth nothing that Post objects reachable with self.test_post_*
@@ -395,7 +448,7 @@ class PostAPITestCase(APITestCase):
             serializer_after_update8.data["content"],
         )
 
-    def test_delete(self):
+    def test_post_delete(self):
 
         # Unauthorized
         response1 = self.client.delete(
@@ -419,3 +472,73 @@ class PostAPITestCase(APITestCase):
         )
         self.assertEqual(response2.status_code, 204)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, title="TestPost2")
+
+    def test_like_list(self):
+
+        queryset = (
+            Like.objects.values("created__date")
+            .annotate(likes=Count("id"))
+            .order_by("-created__date")
+        )
+
+        response = self.client.get(reverse("like-list-api"))
+
+        serializer = LikeSerializer(
+            queryset, many=True, context={"request": response.wsgi_request}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(serializer.data, response.data["results"])
+
+    def test_like_detail(self):
+
+        response = self.client.get(
+            reverse("like-detail-api", args=[self.test_like1.id])
+        )
+
+        serializer = LikeDetailSerializer(
+            self.test_like1,
+            context={"request": response.wsgi_request},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(serializer.data, response.data)
+
+    def test_like_create_delete(self):
+
+        count = self.test_post_11.like_set.count()
+
+        # Unauthorized
+        response1 = self.client.get(
+            reverse("like-create-api", args=[self.test_post_11.id])
+        )
+
+        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(count, self.test_post_11.like_set.count())
+
+        # Authorized by unliked user = CREATE the like
+        response2 = self.client.get(
+            reverse("like-create-api", args=[self.test_post_11.id]),
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
+        )
+
+        self.assertEqual(response2.status_code, 201)
+        self.assertEqual(count + 1, self.test_post_11.like_set.count())
+
+        # Authorized by liked user = DELETE the like
+        response3 = self.client.get(
+            reverse("like-create-api", args=[self.test_post_11.id]),
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
+        )
+
+        self.assertEqual(response3.status_code, 204)
+        self.assertEqual(count, self.test_post_11.like_set.count())
+
+        # Post doesn't exist
+        response3 = self.client.get(
+            reverse("like-create-api", args=[48]),
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
+        )
+
+        self.assertEqual(response3.status_code, 404)
+        self.assertEqual(count, self.test_post_11.like_set.count())
