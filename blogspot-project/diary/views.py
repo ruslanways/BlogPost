@@ -305,22 +305,37 @@ class LikeDetailAPIView(generics.RetrieveAPIView):
 class LikeCreateDestroyAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
+    # First version of view loginc.
+    # def get(self, *args, **kwargs):
+    #     try:
+    #         like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
+    #         reply = 'like created'
+    #         status = 201
+    #     except IntegrityError:
+    #         like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
+    #         like = copy.deepcopy(like_to_delete)
+    #         like_to_delete.delete()
+    #         reply = 'like deleted'
+    #         status = 204
+    #     except Post.DoesNotExist:
+    #         return Response({'status': "Post doesn't exist"}, status=404)
+
+    #     return Response({reply: model_to_dict(like)}, status=status)
+
     def get(self, *args, **kwargs):
         try:
-            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
-            reply = 'like created'
-            status = 201
-        except IntegrityError:
             like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
             like = copy.deepcopy(like_to_delete)
             like_to_delete.delete()
             reply = 'like deleted'
             status = 204
+        except Like.DoesNotExist:
+            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
+            reply = 'like created'
+            status = 201
         except Post.DoesNotExist:
             return Response({'status': "Post doesn't exist"}, status=404)
-
         return Response({reply: model_to_dict(like)}, status=status)
-
 
 class TokenRecoveryAPIView(generics.GenericAPIView):
     """
