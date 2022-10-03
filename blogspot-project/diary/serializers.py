@@ -96,6 +96,10 @@ class PostDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Post
         fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published', 'like_set'
+        extra_kwargs = {
+            'title': {'required': False},
+            'content': {'required': False},
+        }
 
 
 class LikeSerializer(serializers.Serializer):
