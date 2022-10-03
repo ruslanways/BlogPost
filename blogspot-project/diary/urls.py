@@ -58,15 +58,15 @@ urlpatterns = [
     path("posts/<int:pk>/delete/", PostDeleteView.as_view(), name="post-delete"),
 
     path("likes/add/<int:pk>/", LikeCreateView.as_view(), name="like-add"),
-    path("likes_count_on_post/<int:post_id>/", getLikes, name="likes-count-on-post"),
+    path("likes_count_on_post/<int:post_id>/", getLikes, name="like-count-on-post"),
 
-    path("api/v1/users/", UserListAPIView.as_view(), name="users-list-create-api"),
+    path("api/v1/users/", UserListAPIView.as_view(), name="user-list-create-api"),
     path("api/v1/users/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail-update-destroy-api"),
     path("api/v1/login/", TokenObtainPairView.as_view(), name="login-api"),
     path("api/v1/token-refresh/", TokenRefreshView.as_view(), name="token-refresh-api"),
     path("api/v1/token-recovery/", TokenRecoveryAPIView.as_view(), name="token-recovery-api"),
 
-    path("api/v1/posts/", PostAPIView.as_view(), name="post-list-api"),
+    path("api/v1/posts/", PostAPIView.as_view(), name="post-list-create-api"),
     path("api/v1/posts/<int:pk>", PostDetailAPIView.as_view(), name="post-detail-api"),
 
     path("api/v1/likes/", LikeAPIView.as_view(), name="like-list-api"),

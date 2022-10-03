@@ -6,6 +6,8 @@ from .serializers import (
     PostDetailSerializer,
     LikeSerializer,
     LikeDetailSerializer,
+    UserSerializer,
+    UserDetailSerializer
 )
 from .models import CustomUser, Post, Like
 from rest_framework.reverse import reverse
@@ -155,7 +157,7 @@ class PostAPITestCase(APITestCase):
             .order_by("-updated")
         )
 
-        response = self.client.get(reverse("post-list-api"))
+        response = self.client.get(reverse("post-list-create-api"))
 
         serializer = PostSerializer(
             queryset, many=True, context={"request": response.wsgi_request}
@@ -177,7 +179,7 @@ class PostAPITestCase(APITestCase):
 
         # Unauthorized
         response1 = self.client.post(
-            reverse("post-list-api"),
+            reverse("post-list-create-api"),
             {"title": "New Test Post 1", "content": "Some conntent of New Test Post 1"},
         )
 
@@ -186,16 +188,16 @@ class PostAPITestCase(APITestCase):
 
         # Bad request. Lack of "title".
         response2 = self.client.post(
-            reverse("post-list-api"), {"content": "Some conntent of New Test Post 2"}
+            reverse("post-list-create-api"), {"content": "Some conntent of New Test Post 2"}
         )
 
         response3 = self.client.post(
-            reverse("post-list-api"),
+            reverse("post-list-create-api"),
             {"title": "New Test Post 3", "content": "Some conntent of New Test Post 3"},
         )
 
         response4 = self.client.post(
-            reverse("post-list-api"),
+            reverse("post-list-create-api"),
             {
                 "title": "New Test Post 4",
                 "content": "Some conntent of New Test Post 4",
@@ -204,7 +206,7 @@ class PostAPITestCase(APITestCase):
         )
 
         response5 = self.client.post(
-            reverse("post-list-api"),
+            reverse("post-list-create-api"),
             {
                 "title": "New Test Post 5",
                 "content": "Some conntent of New Test Post 5",
@@ -213,7 +215,7 @@ class PostAPITestCase(APITestCase):
         )
 
         response6 = self.client.post(
-            reverse("post-list-api"),
+            reverse("post-list-create-api"),
             {
                 "title": "New Test Post 6",
                 "content": "Some conntent of New Test Post 6",
@@ -542,3 +544,127 @@ class PostAPITestCase(APITestCase):
 
         self.assertEqual(response3.status_code, 404)
         self.assertEqual(count, self.test_post_11.like_set.count())
+
+    def test_user_list(self):
+
+        queryset = CustomUser.objects.all().order_by('-last_request')
+
+        # Unauthorized
+        response1 = self.client.get(reverse("user-list-create-api"))
+        self.assertEqual(response1.status_code, 401)
+
+        # Authorized as non-staff user
+        response2 = self.client.get(
+            reverse("user-list-create-api"),
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
+        )
+        self.assertEqual(response2.status_code, 403)
+
+        # Authorized as admin
+        response3 = self.client.get(
+            reverse("user-list-create-api"),
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_admin}",
+        )
+        serializer = UserSerializer(
+            queryset, many=True, context={"request": response3.wsgi_request}
+        )
+        self.assertEqual(response3.status_code, 200)
+        self.assertEqual(serializer.data, response3.data["results"])
+
+
+    def test_user_create(self):
+
+        # Authorized
+        response1 = self.client.post(
+            reverse("user-list-create-api"),
+            {
+                "username": "NewTestUser", 
+                "email": "somemail@gmail.com", 
+                "password": "ribark8903",
+                "password2": "ribark8903",
+            },
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
+        )
+        self.assertEqual(response1.status_code, 403)
+        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser")
+
+
+        # # Use credentials to set Authorization header with all further requests:
+        # self.client.credentials(HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}")
+
+        # # Bad request. Lack of "title".
+        # response2 = self.client.post(
+        #     reverse("post-list-create-api"), {"content": "Some conntent of New Test Post 2"}
+        # )
+
+        # response3 = self.client.post(
+        #     reverse("post-list-create-api"),
+        #     {"title": "New Test Post 3", "content": "Some conntent of New Test Post 3"},
+        # )
+
+        # response4 = self.client.post(
+        #     reverse("post-list-create-api"),
+        #     {
+        #         "title": "New Test Post 4",
+        #         "content": "Some conntent of New Test Post 4",
+        #         "author": 3,
+        #     },
+        # )
+
+        # response5 = self.client.post(
+        #     reverse("post-list-create-api"),
+        #     {
+        #         "title": "New Test Post 5",
+        #         "content": "Some conntent of New Test Post 5",
+        #         "created": "2022-03-01",
+        #     },
+        # )
+
+        # response6 = self.client.post(
+        #     reverse("post-list-create-api"),
+        #     {
+        #         "title": "New Test Post 6",
+        #         "content": "Some conntent of New Test Post 6",
+        #         "published": False,
+        #     },
+        # )
+
+        # serializer = PostSerializer(
+        #     Post.objects.get(title="New Test Post 3"),
+        #     context={"request": response1.wsgi_request},
+        # )
+
+        # self.assertEqual(response1.status_code, 401)
+        # self.assertRaises(Post.DoesNotExist, Post.objects.get, title="New Test Post 1")
+
+        # self.assertEqual(response2.status_code, 400)
+        # self.assertRaises(Post.DoesNotExist, Post.objects.get, title="New Test Post 2")
+
+        # self.assertEqual(response3.status_code, 201)
+        # self.assertTrue(Post.objects.get(title="New Test Post 3"))
+        # self.assertEqual(serializer.data, response3.data)
+
+        # self.assertEqual(response4.status_code, 201)
+        # self.assertNotEqual(Post.objects.get(title="New Test Post 4").author_id, 3)
+        # self.assertEqual(
+        #     Post.objects.get(title="New Test Post 4").author_id,
+        #     response4.wsgi_request.user.id,
+        # )
+
+        # self.assertEqual(response5.status_code, 201)
+        # self.assertNotEqual(
+        #     Post.objects.get(title="New Test Post 5").created, "2022-03-01"
+        # )
+
+        # self.assertEqual(response6.status_code, 201)
+        # self.assertEqual(Post.objects.get(title="New Test Post 6").published, False)
+
+    def test_user_detail(self):
+        pass
+
+    def test_user_update(self):
+        pass
+
+    def test_user_delete(self):
+        pass
+

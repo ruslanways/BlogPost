@@ -24,7 +24,7 @@ from .serializers import LikeSerializer, LikeDetailSerializer, PostDetailSeriali
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .permissions import OwnerOrAdmin, OwnerOrAdminOrReadOnly, ReadForAdminOnly
+from .permissions import OwnerOrAdmin, OwnerOrAdminOrReadOnly, ReadForAdminCreateForAnonymous
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -239,7 +239,7 @@ def getLikes(request, post_id):
 class UserListAPIView(generics.ListCreateAPIView):
     queryset = CustomUser.objects.all().order_by('-last_request')
     serializer_class = UserSerializer
-    permission_classes = (ReadForAdminOnly,)
+    permission_classes = (ReadForAdminCreateForAnonymous,)
 
 
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
