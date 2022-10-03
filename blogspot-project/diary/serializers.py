@@ -92,6 +92,7 @@ class PostDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
     author = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')
+    like_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='like-detail-api')
 
     class Meta:
         model = Post
