@@ -71,7 +71,7 @@ urlpatterns = [
 
     path("api/v1/likes/", LikeAPIView.as_view(), name="like-list-api"),
     path("api/v1/likes/<int:pk>", LikeDetailAPIView.as_view(), name="like-detail-api"),
-    path("api/v1/createlike/<int:post_id>", LikeCreateDestroyAPIView.as_view()),
+    path("api/v1/createlike/<int:post_id>", LikeCreateDestroyAPIView.as_view(), name="like-create-api"),
     
 ]
 
