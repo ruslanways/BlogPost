@@ -40,7 +40,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name='user-detail-update-destroy-api')
-    # Adding posts and likes that user has to show in response api
+    # Adding posts and likes that user has so show it in response api
     post_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='post-detail-api')
     like_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='like-detail-api')
 
