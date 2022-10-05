@@ -19,7 +19,7 @@ from django.db.utils import IntegrityError
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 from rest_framework import generics, status
-from .serializers import LikeSerializer, LikeDetailSerializer, PostDetailSerializer, PostSerializer, \
+from .serializers import LikeSerializer, LikeDetailSerializer, MyTokenRefreshSerializer, PostDetailSerializer, PostSerializer, \
     TokenRecoverySerializer, UserDetailSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -33,6 +33,7 @@ from rest_framework.filters import OrderingFilter
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.reverse import reverse as reverse_rest
+from rest_framework_simplejwt.views import TokenRefreshView
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
@@ -337,10 +338,15 @@ class LikeCreateDestroyAPIView(APIView):
             return Response({'status': "Post doesn't exist"}, status=404)
         return Response({reply: model_to_dict(like)}, status=status)
 
+
+class MyTokenRefreshView(TokenRefreshView):
+    serializer_class = MyTokenRefreshSerializer
+
+
 class TokenRecoveryAPIView(generics.GenericAPIView):
     """
     APIView to recover token in case of user forgot his password.
-    All non-blacklisted OutstandingToken of the user gets blacklisted.
+    All non-blacklisted REFRESH tokens (OutstandingToken) of the user gets blacklisted.
     And the new (pair) will generate and email to user.
     """
 
@@ -363,13 +369,13 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
 
         out_token = OutstandingToken.objects.filter(user=user)
 
-        if not out_token:
-            return Response({"Oops!": "It seems you didn't have token-auth before"}, status=status.HTTP_404_NOT_FOUND)
+        # if not out_token:
+        #     return Response({"Oops!": "It seems you didn't have token-auth before"}, status=status.HTTP_404_NOT_FOUND)
 
         black_token = BlacklistedToken.objects.filter(token__user=user)
 
         for token_to_black in out_token:
-            if not black_token.filter(token=token_to_black):
+            if not black_token.filter(token=token_to_black):  
                 BlacklistedToken.objects.create(token=token_to_black)
 
         refresh = RefreshToken.for_user(user)

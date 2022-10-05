@@ -3,6 +3,50 @@ from pprint import pprint
 from rest_framework import serializers
 from .models import CustomUser, Like, Post
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+from rest_framework_simplejwt.utils import datetime_from_epoch
+
+class MyTokenRefreshSerializer(TokenRefreshSerializer):
+    """
+    Override parent's validate to add the isuued refresh-token to OutstandingToken list,
+    because it doesn't do that by default.
+    """
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh"])
+
+        data = {"access": str(refresh.access_token)}
+
+        if api_settings.ROTATE_REFRESH_TOKENS:
+            if api_settings.BLACKLIST_AFTER_ROTATION:
+                try:
+                    # Attempt to blacklist the given refresh token
+                    refresh.blacklist()
+                except AttributeError:
+                    # If blacklist app not installed, `blacklist` method will
+                    # not be present
+                    pass
+
+            refresh.set_jti()
+            refresh.set_exp()
+            refresh.set_iat()
+
+            data["refresh"] = str(refresh)
+
+            # Below we add new refresh token to OutstandingToken list
+            user = CustomUser.objects.get(id=refresh["user_id"])
+            jti = refresh[api_settings.JTI_CLAIM]
+            exp = refresh["exp"]
+            OutstandingToken.objects.create(
+                user=user,
+                jti=jti,
+                token=str(refresh),
+                created_at=refresh.current_time,
+                expires_at=datetime_from_epoch(exp),
+            )
+
+        return data
 
 
 

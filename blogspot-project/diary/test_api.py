@@ -1,5 +1,6 @@
 from pprint import pprint
 import random
+import re
 from unittest import skip
 from .serializers import (
     PostSerializer,
@@ -10,15 +11,18 @@ from .serializers import (
     UserDetailSerializer
 )
 from .models import CustomUser, Post, Like
+from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 from rest_framework.settings import api_settings
 from django.db.models import Count
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import FieldError
+from django.core import mail
 
 
 class PostAPITestCase(APITestCase):
+
     @classmethod
     def setUpTestData(cls):
 
@@ -162,7 +166,7 @@ class PostAPITestCase(APITestCase):
             queryset, many=True, context={"request": response.wsgi_request}
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             serializer.data[: api_settings.PAGE_SIZE], response.data["results"]
         )
@@ -227,29 +231,29 @@ class PostAPITestCase(APITestCase):
             context={"request": response1.wsgi_request},
         )
 
-        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, title="New Test Post 1")
 
-        self.assertEqual(response2.status_code, 400)
+        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, title="New Test Post 2")
 
-        self.assertEqual(response3.status_code, 201)
+        self.assertEqual(response3.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Post.objects.get(title="New Test Post 3"))
         self.assertEqual(serializer.data, response3.data)
 
-        self.assertEqual(response4.status_code, 201)
+        self.assertEqual(response4.status_code, status.HTTP_201_CREATED)
         self.assertNotEqual(Post.objects.get(title="New Test Post 4").author_id, 3)
         self.assertEqual(
             Post.objects.get(title="New Test Post 4").author_id,
             response4.wsgi_request.user.id,
         )
 
-        self.assertEqual(response5.status_code, 201)
+        self.assertEqual(response5.status_code, status.HTTP_201_CREATED)
         self.assertNotEqual(
             Post.objects.get(title="New Test Post 5").created, "2022-03-01"
         )
 
-        self.assertEqual(response6.status_code, 201)
+        self.assertEqual(response6.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Post.objects.get(title="New Test Post 6").published, False)
 
     def test_post_detail(self):
@@ -284,12 +288,12 @@ class PostAPITestCase(APITestCase):
             context={"request": response1.wsgi_request},
         )
 
-        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer1.data, response1.data)
 
-        self.assertEqual(response2.status_code, 403)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(response3.status_code, 200)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer3.data, response3.data)
 
     def test_post_update(self):
@@ -319,7 +323,7 @@ class PostAPITestCase(APITestCase):
             context={"request": response1.wsgi_request},
         )
 
-        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(serializer_before_update.data, serializer_after_update1.data)
 
         # Authorized by owner
@@ -335,7 +339,7 @@ class PostAPITestCase(APITestCase):
             Post.objects.get(id=self.test_post_1.id),
             context={"request": response2.wsgi_request},
         )
-        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertNotEqual(
             serializer_after_update1.data, serializer_after_update2.data
         )
@@ -353,7 +357,7 @@ class PostAPITestCase(APITestCase):
             Post.objects.get(id=self.test_post_1.id),
             context={"request": response3.wsgi_request},
         )
-        self.assertEqual(response3.status_code, 200)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
         self.assertNotEqual(
             serializer_after_update2.data, serializer_after_update3.data
         )
@@ -371,7 +375,7 @@ class PostAPITestCase(APITestCase):
             Post.objects.get(id=self.test_post_1.id),
             context={"request": response4.wsgi_request},
         )
-        self.assertEqual(response4.status_code, 200)
+        self.assertEqual(response4.status_code, status.HTTP_200_OK)
         self.assertEqual(
             serializer_after_update3.data["content"],
             serializer_after_update4.data["content"],
@@ -391,7 +395,7 @@ class PostAPITestCase(APITestCase):
             context={"request": response1.wsgi_request},
         )
 
-        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(serializer_after_update4.data, serializer_after_update5.data)
 
         # Authorized by owner
@@ -407,7 +411,7 @@ class PostAPITestCase(APITestCase):
             Post.objects.get(id=self.test_post_1.id),
             context={"request": response2.wsgi_request},
         )
-        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertNotEqual(
             serializer_after_update5.data, serializer_after_update6.data
         )
@@ -425,7 +429,7 @@ class PostAPITestCase(APITestCase):
             Post.objects.get(id=self.test_post_1.id),
             context={"request": response3.wsgi_request},
         )
-        self.assertEqual(response3.status_code, 200)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
         self.assertNotEqual(
             serializer_after_update6.data, serializer_after_update7.data
         )
@@ -443,7 +447,7 @@ class PostAPITestCase(APITestCase):
             Post.objects.get(id=self.test_post_1.id),
             context={"request": response4.wsgi_request},
         )
-        self.assertEqual(response4.status_code, 200)
+        self.assertEqual(response4.status_code, status.HTTP_200_OK)
         self.assertEqual(
             serializer_after_update7.data["content"],
             serializer_after_update8.data["content"],
@@ -455,7 +459,7 @@ class PostAPITestCase(APITestCase):
         response1 = self.client.delete(
             reverse("post-detail-api", args=[self.test_post_1.id])
         )
-        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(Post.objects.get(id=self.test_post_1.id))
 
         # Authorized by owner
@@ -463,7 +467,7 @@ class PostAPITestCase(APITestCase):
             reverse("post-detail-api", args=[self.test_post_1.id]),
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
-        self.assertEqual(response2.status_code, 204)
+        self.assertEqual(response2.status_code, status.HTTP_204_NO_CONTENT)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, title="TestPost1")
 
         # Authorized by admin
@@ -471,7 +475,7 @@ class PostAPITestCase(APITestCase):
             reverse("post-detail-api", args=[self.test_post_2.id]),
             HTTP_AUTHORIZATION=f"JWT {self.access_token_admin}",
         )
-        self.assertEqual(response2.status_code, 204)
+        self.assertEqual(response2.status_code, status.HTTP_204_NO_CONTENT)
         self.assertRaises(Post.DoesNotExist, Post.objects.get, title="TestPost2")
 
     def test_like_list(self):
@@ -488,7 +492,7 @@ class PostAPITestCase(APITestCase):
             queryset, many=True, context={"request": response.wsgi_request}
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer.data, response.data["results"])
 
     def test_like_detail(self):
@@ -502,7 +506,7 @@ class PostAPITestCase(APITestCase):
             context={"request": response.wsgi_request},
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer.data, response.data)
 
     def test_like_create_delete(self):
@@ -514,7 +518,7 @@ class PostAPITestCase(APITestCase):
             reverse("like-create-api", args=[self.test_post_11.id])
         )
 
-        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(count, self.test_post_11.like_set.count())
 
         # Authorized by unliked user = CREATE the like
@@ -523,7 +527,7 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
 
-        self.assertEqual(response2.status_code, 201)
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
         self.assertEqual(count + 1, self.test_post_11.like_set.count())
 
         # Authorized by liked user = DELETE the like
@@ -532,7 +536,7 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
 
-        self.assertEqual(response3.status_code, 204)
+        self.assertEqual(response3.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(count, self.test_post_11.like_set.count())
 
         # Post doesn't exist
@@ -541,7 +545,7 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
 
-        self.assertEqual(response3.status_code, 404)
+        self.assertEqual(response3.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(count, self.test_post_11.like_set.count())
 
     def test_user_list(self):
@@ -550,14 +554,14 @@ class PostAPITestCase(APITestCase):
 
         # Unauthorized
         response1 = self.client.get(reverse("user-list-create-api"))
-        self.assertEqual(response1.status_code, 401)
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Authorized as non-staff user
         response2 = self.client.get(
             reverse("user-list-create-api"),
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
-        self.assertEqual(response2.status_code, 403)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
 
         # Authorized as admin
         response3 = self.client.get(
@@ -567,7 +571,7 @@ class PostAPITestCase(APITestCase):
         serializer = UserSerializer(
             queryset, many=True, context={"request": response3.wsgi_request}
         )
-        self.assertEqual(response3.status_code, 200)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer.data, response3.data["results"])
 
 
@@ -584,7 +588,7 @@ class PostAPITestCase(APITestCase):
             },
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
         )
-        self.assertEqual(response1.status_code, 403)
+        self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser")
 
         # Unauthorized, correct data
@@ -601,7 +605,7 @@ class PostAPITestCase(APITestCase):
             CustomUser.objects.get(username="NewTestUser"), 
             context={"request": response2.wsgi_request}
         )
-        self.assertEqual(response2.status_code, 201)
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
         self.assertTrue(CustomUser.objects.get(username="NewTestUser"))
         self.assertEqual(serializer.data, response2.data)
 
@@ -614,7 +618,7 @@ class PostAPITestCase(APITestCase):
                 "password": "ribark8903cz"
             }
         )
-        self.assertEqual(response3.status_code, 400)
+        self.assertEqual(response3.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
     
         # Email missed
@@ -626,7 +630,7 @@ class PostAPITestCase(APITestCase):
                 "password2": "ribark8903cz",
             }
         )
-        self.assertEqual(response4.status_code, 400)
+        self.assertEqual(response4.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
 
         # Invalid email
@@ -639,7 +643,7 @@ class PostAPITestCase(APITestCase):
                 "password2": "ribark8903cz",
             }
         )
-        self.assertEqual(response5.status_code, 400)
+        self.assertEqual(response5.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
         
         # Passwords doesn't match
@@ -652,7 +656,7 @@ class PostAPITestCase(APITestCase):
                 "password2": "ribark8903",
             }
         )
-        self.assertEqual(response6.status_code, 400)
+        self.assertEqual(response6.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
 
         # Passwords similar with username
@@ -665,7 +669,7 @@ class PostAPITestCase(APITestCase):
                 "password2": "newtestuser2",
             }
         )
-        self.assertEqual(response7.status_code, 400)
+        self.assertEqual(response7.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
 
         # Unnessesary fields
@@ -684,7 +688,7 @@ class PostAPITestCase(APITestCase):
             object, 
             context={"request": response2.wsgi_request}
         )
-        self.assertEqual(response2.status_code, 201)
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
         self.assertFalse(getattr(object, "sex", False))
         self.assertRaises(FieldError, CustomUser.objects.get, sex="Male")
         self.assertEqual(serializer8.data, response8.data)
@@ -701,7 +705,7 @@ class PostAPITestCase(APITestCase):
             self.test_user_1,
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer.data, response.data)
 
         # Authorized by admin
@@ -713,7 +717,7 @@ class PostAPITestCase(APITestCase):
             self.test_user_1,
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer.data, response.data)
 
         # Authorized by non-owner (and non-admin)
@@ -721,13 +725,13 @@ class PostAPITestCase(APITestCase):
             reverse("user-detail-update-destroy-api", args=[self.test_user_1.id]),
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user2}",
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
         # Unauthorized
         response = self.client.get(
             reverse("user-detail-update-destroy-api", args=[self.test_user_1.id]),
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
     def test_user_update(self):
@@ -756,7 +760,7 @@ class PostAPITestCase(APITestCase):
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(serializer_before_update.data, serializer_after_update1.data)
 
         # Authorized by owner
@@ -772,7 +776,7 @@ class PostAPITestCase(APITestCase):
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(serializer_after_update1.data, serializer_after_update2.data)
         self.assertEqual(serializer_after_update2.data["username"], "TestUser1PUTed")
         self.assertEqual(serializer_after_update2.data["email"], "newemail@ukr.net")
@@ -790,7 +794,7 @@ class PostAPITestCase(APITestCase):
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(serializer_after_update2.data, serializer_after_update3.data)
         self.assertEqual(serializer_after_update3.data["username"], "TestUser1PUTedbyAdmin")
         self.assertEqual(serializer_after_update3.data["email"], "newemailadm@ukr.net")
@@ -809,7 +813,7 @@ class PostAPITestCase(APITestCase):
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(serializer_after_update3.data, serializer_after_update4.data)
 
         # Authorized by owner, unnessesary unknown field
@@ -826,7 +830,7 @@ class PostAPITestCase(APITestCase):
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(serializer_after_update4.data, serializer_after_update5.data)
         self.assertEqual(serializer_after_update5.data["username"], "TestUser1PATCHed")
         self.assertEqual(serializer_after_update5.data["email"], "asdnaa1223@gmail.com")
@@ -841,7 +845,7 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
         )
         # Please recall that self.test_user_1.password reffered to the virgin user on the test start
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(CustomUser.objects.get(id=self.test_user_1.id).password, self.test_user_1.password)
 
     def test_user_delete(self):
@@ -849,7 +853,7 @@ class PostAPITestCase(APITestCase):
         response = self.client.delete(
             reverse("user-detail-update-destroy-api", args=[self.test_user_2.id])
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(CustomUser.objects.get(id=self.test_user_2.id))
 
         # Authorized by owner
@@ -857,7 +861,7 @@ class PostAPITestCase(APITestCase):
             reverse("user-detail-update-destroy-api", args=[self.test_user_2.id]),
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user2}",
         )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="TestUser2")
 
         # Authorized by admin
@@ -865,6 +869,101 @@ class PostAPITestCase(APITestCase):
             reverse("user-detail-update-destroy-api", args=[self.test_user_3.id]),
             HTTP_AUTHORIZATION=f"JWT {self.access_token_admin}",
         )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="TestUser3")
+
+    def test_jwt_authentication(self):
+        # Create new user
+        test_user_4 = CustomUser.objects.create_user(
+            email="testuser4@ukr.net", 
+            username="TestUser4", 
+            password="fokker12345"
+        )
+
+        # Login-api icorrect password
+        response1 = self.client.post(
+            reverse("login-api"),
+            {
+                "username": test_user_4.username,
+                "password": "Kaskmcs12341",
+            }
+        )
+        self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Login-api correct data
+        response2 = self.client.post(
+            reverse("login-api"),
+            {
+                "username": test_user_4.username,
+                "password": "fokker12345",
+            }
+        )
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+
+        # Verify that refresh token (and access token too) is valid
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": response2.data["refresh"]}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
+
+        # incorrect token
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": "jsndvkajsdnvkajsnv"}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Token-refresh-api
+        response3 = self.client.post(
+            reverse("token-refresh-api"),
+            {
+                "refresh": response2.data["refresh"],
+            }
+        )
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
+        self.assertTrue(response3.data["access"])
+        self.assertTrue(response3.data["refresh"])
+        # Check wether new refreshed refresh token is valid
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": response3.data["refresh"]}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
+        # Check wether OLD refresh token is invalid
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": response2.data["refresh"]}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Token-recovery-api
+        response = self.client.post(
+            reverse("token-recovery-api"),
+            {
+                "email": test_user_4.email
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Get the new 'access' token from email which has been emailed to the user
+        # It will be use by user to change password
+        new_access_token = re.search(r"(?<='access': ).+", mail.outbox[0].body)
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": new_access_token.group()}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
+        # Check wether OLD REFRESHED refresh token is invalid
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": response3.data["refresh"]}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
+        # Check wether OLD-OLD refresh token is invalid
+        verify_token = self.client.post(
+            reverse("token_verify"),
+            {"token": response2.data["refresh"]}
+        )
+        self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
+
 

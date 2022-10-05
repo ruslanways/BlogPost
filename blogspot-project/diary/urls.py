@@ -2,6 +2,7 @@ from django.urls import include, path
 from .views import (
     HomeView,
     HomeViewLikeOrdered,
+    MyTokenRefreshView,
 
     SignUp,
     Login,
@@ -32,7 +33,8 @@ from .views import (
     LikeDetailAPIView,
 )
 from django.contrib.auth.views import LogoutView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenVerifyView
 
 
 urlpatterns = [
@@ -63,7 +65,8 @@ urlpatterns = [
     path("api/v1/users/", UserListAPIView.as_view(), name="user-list-create-api"),
     path("api/v1/users/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail-update-destroy-api"),
     path("api/v1/login/", TokenObtainPairView.as_view(), name="login-api"),
-    path("api/v1/token-refresh/", TokenRefreshView.as_view(), name="token-refresh-api"),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path("api/v1/token-refresh/", MyTokenRefreshView.as_view(), name="token-refresh-api"),
     path("api/v1/token-recovery/", TokenRecoveryAPIView.as_view(), name="token-recovery-api"),
 
     path("api/v1/posts/", PostAPIView.as_view(), name="post-list-create-api"),
