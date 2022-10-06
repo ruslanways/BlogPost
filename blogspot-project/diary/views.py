@@ -5,29 +5,54 @@ from django.views import View
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import MultipleObjectMixin
-from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView
+from django.contrib.auth.views import (
+    LoginView,
+    PasswordResetView,
+    PasswordResetConfirmView,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
 from .models import Post, CustomUser, Like
 from django.db.models import Count, Prefetch, F
 from django.forms.models import model_to_dict
-from .forms import AddPostForm, CustomPasswordResetForm, CustomUserCreationForm, CustomAuthenticationForm, \
-    CutomSetPasswordForm, UpdatePostForm
+from .forms import (
+    AddPostForm,
+    CustomPasswordResetForm,
+    CustomUserCreationForm,
+    CustomAuthenticationForm,
+    CutomSetPasswordForm,
+    UpdatePostForm,
+)
 from django.conf import settings
 import redis
 from django.db.utils import IntegrityError
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 from rest_framework import generics, status
-from .serializers import LikeSerializer, LikeDetailSerializer, MyTokenRefreshSerializer, PostDetailSerializer, PostSerializer, \
-    TokenRecoverySerializer, UserDetailSerializer, UserSerializer
+from .serializers import (
+    LikeSerializer,
+    LikeDetailSerializer,
+    MyTokenRefreshSerializer,
+    PostDetailSerializer,
+    PostSerializer,
+    TokenRecoverySerializer,
+    UserDetailSerializer,
+    UserSerializer,
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .permissions import OwnerOrAdmin, OwnerOrAdminOrReadOnly, ReadForAdminCreateForAnonymous
+from .permissions import (
+    OwnerOrAdmin,
+    OwnerOrAdminOrReadOnly,
+    ReadForAdminCreateForAnonymous,
+)
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.token_blacklist.models import (
+    OutstandingToken,
+    BlacklistedToken,
+)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from django.core.mail import send_mail
@@ -43,32 +68,38 @@ redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, d
 class HomeView(ListView):
     paginate_by = 5
 
-    template_name = 'diary/index.html'
-    queryset = Post.objects.annotate(Count('like')).select_related('author').filter(published=True)
-    ordering = ['-updated', '-like__count']
+    template_name = "diary/index.html"
+    queryset = (
+        Post.objects.annotate(Count("like"))
+        .select_related("author")
+        .filter(published=True)
+    )
+    ordering = ["-updated", "-like__count"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['ordering'] = 'fresh'
+        context["ordering"] = "fresh"
         if self.request.user.is_authenticated:
-            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+            context["liked_by_user"] = self.queryset.filter(
+                like__user=self.request.user
+            )
         return context
 
 
 class HomeViewLikeOrdered(HomeView):
     """Provide ordering by clicking on a link leads to the view."""
 
-    ordering = ['-like__count', '-updated']
+    ordering = ["-like__count", "-updated"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['ordering'] = 'liked'
+        context["ordering"] = "liked"
         return context
 
 
 class SignUp(CreateView):
     form_class = CustomUserCreationForm
-    template_name = 'registration/signup.html'
+    template_name = "registration/signup.html"
 
     # success_url = reverse_lazy('home')
 
@@ -78,15 +109,15 @@ class SignUp(CreateView):
         """make an authorization after signingup"""
         login(self.request, self.object)
         """and redirect to user profile with user.pk"""
-        return redirect('author-detail', self.object.pk)
+        return redirect("author-detail", self.object.pk)
 
 
 class Login(LoginView):
-    template_name = 'registration/login.html'
+    template_name = "registration/login.html"
     form_class = CustomAuthenticationForm
 
     def get_default_redirect_url(self):
-        return resolve_url('author-detail', self.request.user.pk)
+        return resolve_url("author-detail", self.request.user.pk)
 
 
 class PasswordReset(PasswordResetView):
@@ -98,8 +129,8 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 
 class AuthorListView(UserPassesTestMixin, ListView):
-    template_name = 'diary/customuser_list.html'
-    permission_denied_message = 'Access for staff only!'
+    template_name = "diary/customuser_list.html"
+    permission_denied_message = "Access for staff only!"
 
     def test_func(self):
         return self.request.user.is_staff
@@ -110,46 +141,59 @@ class AuthorListView(UserPassesTestMixin, ListView):
         That contains last ordering filed to make reverse ordering by field.
         p.s. it's better to implement it on a client side using js.
         """
-        if self.kwargs.get('sortfield'):
-            if '-' + self.kwargs.get('sortfield') == redis_client.get('customordering').decode():
-                redis_client.set(name='customordering', value=self.kwargs.get('sortfield'))
+        if self.kwargs.get("sortfield"):
+            if (
+                "-" + self.kwargs.get("sortfield")
+                == redis_client.get("customordering").decode()
+            ):
+                redis_client.set(
+                    name="customordering", value=self.kwargs.get("sortfield")
+                )
             else:
-                redis_client.set(name='customordering', value='-' + self.kwargs.get('sortfield'))
+                redis_client.set(
+                    name="customordering", value="-" + self.kwargs.get("sortfield")
+                )
         else:
-            redis_client.mset({'customordering': 'id'})
+            redis_client.mset({"customordering": "id"})
         return CustomUser.objects.annotate(
-            Count('post', distinct=True),
-            Count('like', distinct=True),
-            Count('post__like', distinct=True)).order_by(redis_client.get('customordering').decode())
+            Count("post", distinct=True),
+            Count("like", distinct=True),
+            Count("post__like", distinct=True),
+        ).order_by(redis_client.get("customordering").decode())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['posts'] = Post.objects.count()
-        context['likes'] = Like.objects.count()
+        context["posts"] = Post.objects.count()
+        context["likes"] = Like.objects.count()
         return context
 
 
 class AuthorDetailView(UserPassesTestMixin, DetailView, MultipleObjectMixin):
-    template_name = 'diary/customuser_detail.html'
+    template_name = "diary/customuser_detail.html"
     model = CustomUser
     paginate_by = 5
-    permission_denied_message = 'Access for staff or profile owner only!'
+    permission_denied_message = "Access for staff or profile owner only!"
 
     def test_func(self):
-        return self.request.user.is_staff or self.request.user.id == self.kwargs['pk']
+        return self.request.user.is_staff or self.request.user.id == self.kwargs["pk"]
 
     def get_context_data(self, **kwargs):
-        object_list = self.get_object().post_set.all().annotate(Count('like')).order_by('-updated', '-like__count')
+        object_list = (
+            self.get_object()
+            .post_set.all()
+            .annotate(Count("like"))
+            .order_by("-updated", "-like__count")
+        )
         context = super().get_context_data(object_list=object_list, **kwargs)
         return context
 
 
 class PostListView(UserPassesTestMixin, HomeView, ListView):
-    template_name = 'diary/post_list.html'
-    queryset = Post.objects.annotate(Count('like')).select_related('author')
+    template_name = "diary/post_list.html"
+    queryset = Post.objects.annotate(Count("like")).select_related("author")
     # ordering = ['-updated', '-like__count'] inherit from parent class
 
-    permission_denied_message = 'Access for staff only!'
+    permission_denied_message = "Access for staff only!"
 
     def test_func(self):
         return self.request.user.is_staff
@@ -157,8 +201,8 @@ class PostListView(UserPassesTestMixin, HomeView, ListView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     form_class = AddPostForm
-    template_name = 'diary/add-post.html'
-    success_url = '/'
+    template_name = "diary/add-post.html"
+    success_url = "/"
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -166,25 +210,30 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostDetailView(DetailView):
-    template_name = 'diary/post_detail.html'
-    queryset = Post.objects.annotate(Count('like')).select_related('author')
+    template_name = "diary/post_detail.html"
+    queryset = Post.objects.annotate(Count("like")).select_related("author")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
-            context['liked_by_user'] = self.queryset.filter(like__user=self.request.user)
+            context["liked_by_user"] = self.queryset.filter(
+                like__user=self.request.user
+            )
         return context
 
 
 class PostUpdateView(UserPassesTestMixin, UpdateView):
-    permission_denied_message = 'Access for staff or profile owner!'
+    permission_denied_message = "Access for staff or profile owner!"
 
     def test_func(self):
-        return self.request.user.is_staff or self.request.user.pk == self.get_object().author_id
+        return (
+            self.request.user.is_staff
+            or self.request.user.pk == self.get_object().author_id
+        )
 
     model = Post
     form_class = UpdatePostForm
-    template_name = 'diary/post-update.html'
+    template_name = "diary/post-update.html"
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -192,27 +241,33 @@ class PostUpdateView(UserPassesTestMixin, UpdateView):
 
 
 class PostDeleteView(PostUpdateView, DeleteView):
-    template_name = 'diary/post-delete.html'
+    template_name = "diary/post-delete.html"
 
     def get_success_url(self, *args, **kwargs):
-        return reverse_lazy('author-detail', kwargs={'pk': f'{self.get_object().author_id}'})
+        return reverse_lazy(
+            "author-detail", kwargs={"pk": f"{self.get_object().author_id}"}
+        )
 
 
 class LikeCreateView(LoginRequiredMixin, View):
-    redirect_field_name = '/'
+    redirect_field_name = "/"
 
-    http_method_names = ['get']
+    http_method_names = ["get"]
 
     def get(self, *args, **kwargs):
         try:
-            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
-            reply = 'like created'
+            like = Like.objects.create(
+                user=self.request.user, post=Post.objects.get(pk=self.kwargs["pk"])
+            )
+            reply = "like created"
             status = 201
         except IntegrityError:
-            like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['pk']))
+            like_to_delete = Like.objects.get(
+                user=self.request.user, post=Post.objects.get(pk=self.kwargs["pk"])
+            )
             like = copy.deepcopy(like_to_delete)
             like_to_delete.delete()
-            reply = 'like deleted'
+            reply = "like deleted"
             status = 204
         except Post.DoesNotExist:
             raise Http404
@@ -238,7 +293,7 @@ def getLikes(request, post_id):
 
 
 class UserListAPIView(generics.ListCreateAPIView):
-    queryset = CustomUser.objects.all().order_by('-last_request')
+    queryset = CustomUser.objects.all().order_by("-last_request")
     serializer_class = UserSerializer
     permission_classes = (ReadForAdminCreateForAnonymous,)
 
@@ -253,10 +308,10 @@ class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         Add extra context 'obj' for using in serializer validator to get object.
         """
         return {
-            'request': self.request,
-            'format': self.format_kwarg,
-            'view': self,
-            'obj': self.get_object()
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "obj": self.get_object(),
         }
 
     permission_classes = (OwnerOrAdmin,)
@@ -265,11 +320,15 @@ class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 class PostAPIView(generics.ListCreateAPIView):
     serializer_class = PostSerializer
     filter_backends = DjangoFilterBackend, OrderingFilter
-    ordering_fields = 'id', 'updated', 'created'
+    ordering_fields = "id", "updated", "created"
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        return Post.objects.exclude(published=False).annotate(likes=Count('like')).order_by('-updated')
+        return (
+            Post.objects.exclude(published=False)
+            .annotate(likes=Count("like"))
+            .order_by("-updated")
+        )
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -284,18 +343,31 @@ class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     def retrieve(self, request, *args, **kwargs):
         """Make visible only published posts if user is not owner or admin."""
         instance = self.get_object()
-        if not instance.published and instance.author != request.user and not request.user.is_staff:
-            return Response({'Forbidden': "Unpublished post can be retrieved by owner only!"}, status=403)
+        if (
+            not instance.published
+            and instance.author != request.user
+            and not request.user.is_staff
+        ):
+            return Response(
+                {"Forbidden": "Unpublished post can be retrieved by owner only!"},
+                status=403,
+            )
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 
 class LikeAPIView(generics.ListAPIView):
-    queryset = Like.objects.values('created__date').annotate(likes=Count('id')).order_by('-created__date')
+    queryset = (
+        Like.objects.values("created__date")
+        .annotate(likes=Count("id"))
+        .order_by("-created__date")
+    )
     serializer_class = LikeSerializer
     filter_backends = DjangoFilterBackend, OrderingFilter
-    filterset_fields = {'created': ['gte', 'lte', 'date__range'], }
-    ordering_fields = 'created', 'likes'
+    filterset_fields = {
+        "created": ["gte", "lte", "date__range"],
+    }
+    ordering_fields = "created", "likes"
 
 
 class LikeDetailAPIView(generics.RetrieveAPIView):
@@ -325,17 +397,21 @@ class LikeCreateDestroyAPIView(APIView):
 
     def get(self, *args, **kwargs):
         try:
-            like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
+            like_to_delete = Like.objects.get(
+                user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
+            )
             like = copy.deepcopy(like_to_delete)
             like_to_delete.delete()
-            reply = 'like deleted'
+            reply = "like deleted"
             status = 204
         except Like.DoesNotExist:
-            like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
-            reply = 'like created'
+            like = Like.objects.create(
+                user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
+            )
+            reply = "like created"
             status = 201
         except Post.DoesNotExist:
-            return Response({'status': "Post doesn't exist"}, status=404)
+            return Response({"status": "Post doesn't exist"}, status=404)
         return Response({reply: model_to_dict(like)}, status=status)
 
 
@@ -352,20 +428,25 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
 
-        if len(request.data) != 1 or not request.data.get('email'):
-            return Response({'error': 'please post email only'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(request.data) != 1 or not request.data.get("email"):
+            return Response(
+                {"error": "please post email only"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = TokenRecoverySerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        email = serializer.validated_data['email']
+        email = serializer.validated_data["email"]
 
         try:
             user = CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
-            return Response({"Oops!": "There is no user belogs mentioned emal"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"Oops!": "There is no user belogs mentioned emal"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         out_token = OutstandingToken.objects.filter(user=user)
 
@@ -375,12 +456,14 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
         black_token = BlacklistedToken.objects.filter(token__user=user)
 
         for token_to_black in out_token:
-            if not black_token.filter(token=token_to_black):  
+            if not black_token.filter(token=token_to_black):
                 BlacklistedToken.objects.create(token=token_to_black)
 
         refresh = RefreshToken.for_user(user)
 
-        link_to_change_user = reverse_rest('user-detail-update-destroy-api', request=request, args=[user.id])
+        link_to_change_user = reverse_rest(
+            "user-detail-update-destroy-api", request=request, args=[user.id]
+        )
 
         send_mail(
             "BLOGPOST Token recovery",
@@ -390,10 +473,10 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
             f"{link_to_change_user}"
             "\n\nTherefore you could obtain new tokens pair by logging.",
             None,
-            [user.email]
+            [user.email],
         )
 
-        return Response({'Recovery email send': 'Success'}, status=status.HTTP_200_OK)
+        return Response({"Recovery email send": "Success"}, status=status.HTTP_200_OK)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -414,9 +497,28 @@ class MyTokenObtainPairView(TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        response = Response({"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK)
-        response.set_cookie(key='refresh_token', value=serializer.validated_data["refresh"], httponly=True,
-                            samesite="Strict")
+        response = Response(
+            {"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=serializer.validated_data["refresh"],
+            httponly=True,
+            samesite="Strict",
+        )
 
-        access = {'access': serializer.validated_data["access"]}
-        return render(request, template_name='diary/aftertoken.html', context=access, status=200)
+        access = {"access": serializer.validated_data["access"]}
+        return render(
+            request, template_name="diary/aftertoken.html", context=access, status=200
+        )
+
+
+class RootAPIView(APIView):
+    def get(self, request):
+        return Response(
+            {
+                "posts": reverse_rest("post-list-create-api", request=request),
+                "users": reverse_rest("user-list-create-api", request=request),
+                "likes": reverse_rest("like-list-api", request=request),
+            }
+        )

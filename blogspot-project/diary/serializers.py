@@ -8,11 +8,13 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.utils import datetime_from_epoch
 
+
 class MyTokenRefreshSerializer(TokenRefreshSerializer):
     """
     Override parent's validate to add the isuued refresh-token to OutstandingToken list,
     because it doesn't do that by default.
     """
+
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
 
@@ -49,69 +51,127 @@ class MyTokenRefreshSerializer(TokenRefreshSerializer):
         return data
 
 
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='user-detail-update-destroy-api')
-    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name="user-detail-update-destroy-api"
+    )
+    password2 = serializers.CharField(style={"input_type": "password"}, write_only=True)
 
     class Meta:
         model = CustomUser
-        fields = 'url', 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'password', 'password2'
+        fields = (
+            "url",
+            "id",
+            "username",
+            "email",
+            "last_request",
+            "last_login",
+            "date_joined",
+            "is_staff",
+            "is_active",
+            "password",
+            "password2",
+        )
         extra_kwargs = {
-            'password': {'style': {'input_type': 'password'} ,'write_only': True, 'validators': [validate_password]},
+            "password": {
+                "style": {"input_type": "password"},
+                "write_only": True,
+                "validators": [validate_password],
+            },
         }
-        read_only_fields = 'id', 'is_active', 'last_request', 'last_login', 'date_joined', 'is_staff'
+        read_only_fields = (
+            "id",
+            "is_active",
+            "last_request",
+            "last_login",
+            "date_joined",
+            "is_staff",
+        )
 
     def validate(self, data):
         data_without_password2 = copy.deepcopy(data)
-        del data_without_password2['password2']
-        validate_password(password=data.get('password'), user=CustomUser(**data_without_password2))
+        del data_without_password2["password2"]
+        validate_password(
+            password=data.get("password"), user=CustomUser(**data_without_password2)
+        )
         return data
 
     def create(self, validated_data):
-        password = validated_data['password']
-        password2 = validated_data['password2']
+        password = validated_data["password"]
+        password2 = validated_data["password2"]
         if password != password2:
-            raise serializers.ValidationError({'Password': 'Passwords must match.'})
+            raise serializers.ValidationError({"Password": "Passwords must match."})
         instance = self.Meta.model._default_manager.create_user(
-                                                    email=validated_data['email'],
-                                                    username=validated_data['username'],
-                                                    password=validated_data['password']
+            email=validated_data["email"],
+            username=validated_data["username"],
+            password=validated_data["password"],
         )
         return instance
 
+
 class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='user-detail-update-destroy-api')
+    url = serializers.HyperlinkedIdentityField(
+        view_name="user-detail-update-destroy-api"
+    )
     # Adding posts and likes that user has so show it in response api
-    post_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='post-detail-api')
-    like_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='like-detail-api')
+    post_set = serializers.HyperlinkedRelatedField(
+        many=True, read_only=True, view_name="post-detail-api"
+    )
+    like_set = serializers.HyperlinkedRelatedField(
+        many=True, read_only=True, view_name="like-detail-api"
+    )
 
     class Meta:
         model = CustomUser
-        fields = 'url', 'id', 'username', 'email', 'last_request', 'last_login', 'date_joined', 'is_staff', 'is_active', 'post_set', 'like_set', 'password'
+        fields = (
+            "url",
+            "id",
+            "username",
+            "email",
+            "last_request",
+            "last_login",
+            "date_joined",
+            "is_staff",
+            "is_active",
+            "post_set",
+            "like_set",
+            "password",
+        )
         extra_kwargs = {
-            'username': {'required': False},
-            'email': {'required': False},
-            'password': {'required': False, 'write_only': True}
+            "username": {"required": False},
+            "email": {"required": False},
+            "password": {"required": False, "write_only": True},
         }
-        read_only_fields = 'id', 'is_active', 'last_request', 'last_login', 'date_joined', 'is_staff'
-    
+        read_only_fields = (
+            "id",
+            "is_active",
+            "last_request",
+            "last_login",
+            "date_joined",
+            "is_staff",
+        )
+
     def validate(self, data):
-        user = CustomUser(**data) if data.get('password', False) and len(data) > 1 else self.context['obj'] 
-        if data.get('password'):
-            validate_password(password=data.get('password'), user=user)
+        user = (
+            CustomUser(**data)
+            if data.get("password", False) and len(data) > 1
+            else self.context["obj"]
+        )
+        if data.get("password"):
+            validate_password(password=data.get("password"), user=user)
         return data
 
     def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
-        password_new = validated_data.get('password')
+        instance.username = validated_data.get("username", instance.username)
+        instance.email = validated_data.get("email", instance.email)
+        password_new = validated_data.get("password")
         if password_new:
             instance.set_password(password_new)
         instance.save()
         return instance
+
 
 class TokenRecoverySerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=200)
@@ -119,9 +179,13 @@ class TokenRecoverySerializer(serializers.Serializer):
 
 class PostSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
-    published = serializers.BooleanField(write_only=True, required=False, default=True, initial=True)
-    author = serializers.HyperlinkedRelatedField(read_only=True, source='author.id', view_name='user-detail-update-destroy-api')
+    url = serializers.HyperlinkedIdentityField(view_name="post-detail-api")
+    published = serializers.BooleanField(
+        write_only=True, required=False, default=True, initial=True
+    )
+    author = serializers.HyperlinkedRelatedField(
+        read_only=True, source="author.id", view_name="user-detail-update-destroy-api"
+    )
     # Example way to associate new created post with current user:
     # author = serializers.HiddenField(write_only=True, default=serializers.CurrentUserDefault())
     # author_id = serializers.IntegerField(read_only=True, default=serializers.CurrentUserDefault())
@@ -129,21 +193,47 @@ class PostSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Post
-        fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published', 'likes'
+        fields = (
+            "id",
+            "url",
+            "author",
+            "title",
+            "content",
+            "image",
+            "created",
+            "updated",
+            "published",
+            "likes",
+        )
 
 
 class PostDetailSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='post-detail-api')
-    author = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')
-    like_set = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='like-detail-api')
+    url = serializers.HyperlinkedIdentityField(view_name="post-detail-api")
+    author = serializers.HyperlinkedRelatedField(
+        read_only=True, view_name="user-detail-update-destroy-api"
+    )
+    like_set = serializers.HyperlinkedRelatedField(
+        many=True, read_only=True, view_name="like-detail-api"
+    )
 
     class Meta:
         model = Post
-        fields = 'id', 'url', 'author', 'title', 'content', 'image', 'created', 'updated', 'published', 'like_set'
+        fields = (
+            "id",
+            "url",
+            "author",
+            "title",
+            "content",
+            "image",
+            "created",
+            "updated",
+            "published",
+            "like_set",
+        )
         extra_kwargs = {
-            'title': {'required': False},
-            'content': {'required': False},
+            "title": {"required": False},
+            "content": {"required": False},
         }
 
 
@@ -155,11 +245,14 @@ class LikeSerializer(serializers.Serializer):
 
 class LikeDetailSerializer(serializers.HyperlinkedModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField(view_name='like-detail-api')
-    user = serializers.HyperlinkedRelatedField(read_only=True, view_name='user-detail-update-destroy-api')
-    post = serializers.HyperlinkedRelatedField(read_only=True, view_name='post-detail-api')
+    url = serializers.HyperlinkedIdentityField(view_name="like-detail-api")
+    user = serializers.HyperlinkedRelatedField(
+        read_only=True, view_name="user-detail-update-destroy-api"
+    )
+    post = serializers.HyperlinkedRelatedField(
+        read_only=True, view_name="post-detail-api"
+    )
 
     class Meta:
         model = Like
-        fields = 'url', 'id', 'created', 'user', 'post'
-
+        fields = "url", "id", "created", "user", "post"

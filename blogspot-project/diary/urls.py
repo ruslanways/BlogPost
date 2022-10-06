@@ -3,6 +3,7 @@ from .views import (
     HomeView,
     HomeViewLikeOrdered,
     MyTokenRefreshView,
+    RootAPIView,
 
     SignUp,
     Login,
@@ -61,6 +62,8 @@ urlpatterns = [
 
     path("likes/add/<int:pk>/", LikeCreateView.as_view(), name="like-add"),
     path("likes_count_on_post/<int:post_id>/", getLikes, name="like-count-on-post"),
+
+    path("api/v1/", RootAPIView.as_view(), name="root-api"),
 
     path("api/v1/users/", UserListAPIView.as_view(), name="user-list-create-api"),
     path("api/v1/users/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail-update-destroy-api"),

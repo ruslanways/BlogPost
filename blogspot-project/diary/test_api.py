@@ -8,7 +8,7 @@ from .serializers import (
     LikeSerializer,
     LikeDetailSerializer,
     UserSerializer,
-    UserDetailSerializer
+    UserDetailSerializer,
 )
 from .models import CustomUser, Post, Like
 from rest_framework import status
@@ -22,83 +22,64 @@ from django.core import mail
 
 
 class PostAPITestCase(APITestCase):
-
     @classmethod
     def setUpTestData(cls):
 
-        CustomUser.objects.create_user(
+        cls.admin = CustomUser.objects.create_user(
             email="admin@ukr.net", username="admin", password="fokker123", is_staff=True
         )
-        CustomUser.objects.create_user(
+        cls.test_user_1 = CustomUser.objects.create_user(
             email="test1@ukr.net", username="TestUser1", password="fokker123"
         )
-        CustomUser.objects.create_user(
+        cls.test_user_2 = CustomUser.objects.create_user(
             email="test2@ukr.net", username="TestUser2", password="fokker123"
         )
-        CustomUser.objects.create_user(
+        cls.test_user_3 = CustomUser.objects.create_user(
             email="test3@ukr.net", username="TestUser3", password="fokker123"
         )
 
-        cls.admin = CustomUser.objects.get(username="admin")
-        cls.test_user_1 = CustomUser.objects.get(username="TestUser1")
-        cls.test_user_2 = CustomUser.objects.get(username="TestUser2")
-        cls.test_user_3 = CustomUser.objects.get(username="TestUser3")
-
-        Post.objects.create(
+        cls.test_post_1 = Post.objects.create(
             title="TestPost1", author=cls.test_user_1, content="Some test 1 content"
         )
-        Post.objects.create(
+        cls.test_post_2 = Post.objects.create(
             title="TestPost2", author=cls.test_user_3, content="Some test 2 content"
         )
-        Post.objects.create(
+        cls.test_post_3 = Post.objects.create(
             title="TestPost3",
             author=cls.test_user_1,
             content="Some test 3 content",
             published=False,
         )
-        Post.objects.create(
+        cls.test_post_4 = Post.objects.create(
             title="TestPost4", author=cls.test_user_2, content="Some test 4 content"
         )
-        Post.objects.create(
+        cls.test_post_5 = Post.objects.create(
             title="TestPost5", author=cls.test_user_3, content="Some test 5 content"
         )
-        Post.objects.create(
+        cls.test_post_6 = Post.objects.create(
             title="TestPost6", author=cls.test_user_3, content="Some test 6 content"
         )
-        Post.objects.create(
+        cls.test_post_7 = Post.objects.create(
             title="TestPost7", author=cls.test_user_1, content="Some test 7 content"
         )
-        Post.objects.create(
+        cls.test_post_8 = Post.objects.create(
             title="TestPost8", author=cls.test_user_2, content="Some test 8 content"
         )
-        Post.objects.create(
+        cls.test_post_9 = Post.objects.create(
             title="TestPost9", author=cls.test_user_3, content="Some test 9 content"
         )
-        Post.objects.create(
+        cls.test_post_10 = Post.objects.create(
             title="TestPost10", author=cls.test_user_2, content="Some test 10 content"
         )
-        Post.objects.create(
+        cls.test_post_11 = Post.objects.create(
             title="TestPost11", author=cls.test_user_3, content="Some test 11 content"
         )
-        Post.objects.create(
+        cls.test_post_12 = Post.objects.create(
             title="TestPost12",
             author=cls.test_user_3,
             content="Some test 11 content",
             published=False,
         )
-
-        cls.test_post_1 = Post.objects.get(title="TestPost1")
-        cls.test_post_2 = Post.objects.get(title="TestPost2")
-        cls.test_post_3 = Post.objects.get(title="TestPost3")
-        cls.test_post_4 = Post.objects.get(title="TestPost4")
-        cls.test_post_5 = Post.objects.get(title="TestPost5")
-        cls.test_post_6 = Post.objects.get(title="TestPost6")
-        cls.test_post_7 = Post.objects.get(title="TestPost7")
-        cls.test_post_8 = Post.objects.get(title="TestPost8")
-        cls.test_post_9 = Post.objects.get(title="TestPost9")
-        cls.test_post_10 = Post.objects.get(title="TestPost10")
-        cls.test_post_11 = Post.objects.get(title="TestPost11")
-        cls.test_post_12 = Post.objects.get(title="TestPost12")
 
         # Obtaining an access token for further authorization by JWT-tokens.
         cls.access_token_admin = RefreshToken.for_user(cls.admin).access_token
@@ -106,51 +87,54 @@ class PostAPITestCase(APITestCase):
         cls.access_token_user2 = RefreshToken.for_user(cls.test_user_2).access_token
         cls.access_token_user3 = RefreshToken.for_user(cls.test_user_3).access_token
 
-        Like.objects.create(user=cls.test_user_1, post=cls.test_post_1)
-        Like.objects.create(user=cls.test_user_1, post=cls.test_post_3)
-        Like.objects.create(user=cls.test_user_1, post=cls.test_post_5)
-        Like.objects.create(user=cls.test_user_1, post=cls.test_post_9)
-        Like.objects.create(user=cls.test_user_1, post=cls.test_post_7)
-        Like.objects.create(user=cls.test_user_1, post=cls.test_post_2)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_1)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_2)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_3)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_8)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_10)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_11)
-        Like.objects.create(user=cls.test_user_2, post=cls.test_post_5)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_11)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_3)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_2)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_1)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_4)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_7)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_8)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_9)
-        Like.objects.create(user=cls.test_user_3, post=cls.test_post_6)
-
-        cls.test_like1 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_1)
-        cls.test_like2 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_3)
-        cls.test_like3 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_5)
-        cls.test_like4 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_9)
-        cls.test_like5 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_7)
-        cls.test_like6 = Like.objects.get(user=cls.test_user_1, post=cls.test_post_2)
-        cls.test_like7 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_1)
-        cls.test_like8 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_2)
-        cls.test_like9 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_3)
-        cls.test_like10 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_8)
-        cls.test_like11 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_10)
-        cls.test_like12 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_11)
-        cls.test_like13 = Like.objects.get(user=cls.test_user_2, post=cls.test_post_5)
-        cls.test_like14 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_11)
-        cls.test_like15 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_3)
-        cls.test_like16 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_2)
-        cls.test_like17 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_1)
-        cls.test_like18 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_4)
-        cls.test_like19 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_7)
-        cls.test_like20 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_8)
-        cls.test_like21 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_9)
-        cls.test_like22 = Like.objects.get(user=cls.test_user_3, post=cls.test_post_6)
+        cls.test_like1 = Like.objects.create(user=cls.test_user_1, post=cls.test_post_1)
+        cls.test_like2 = Like.objects.create(user=cls.test_user_1, post=cls.test_post_3)
+        cls.test_like3 = Like.objects.create(user=cls.test_user_1, post=cls.test_post_5)
+        cls.test_like4 = Like.objects.create(user=cls.test_user_1, post=cls.test_post_9)
+        cls.test_like5 = Like.objects.create(user=cls.test_user_1, post=cls.test_post_7)
+        cls.test_like6 = Like.objects.create(user=cls.test_user_1, post=cls.test_post_2)
+        cls.test_like7 = Like.objects.create(user=cls.test_user_2, post=cls.test_post_1)
+        cls.test_like8 = Like.objects.create(user=cls.test_user_2, post=cls.test_post_2)
+        cls.test_like9 = Like.objects.create(user=cls.test_user_2, post=cls.test_post_3)
+        cls.test_like10 = Like.objects.create(
+            user=cls.test_user_2, post=cls.test_post_8
+        )
+        cls.test_like11 = Like.objects.create(
+            user=cls.test_user_2, post=cls.test_post_10
+        )
+        cls.test_like12 = Like.objects.create(
+            user=cls.test_user_2, post=cls.test_post_11
+        )
+        cls.test_like13 = Like.objects.create(
+            user=cls.test_user_2, post=cls.test_post_5
+        )
+        cls.test_like14 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_11
+        )
+        cls.test_like15 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_3
+        )
+        cls.test_like16 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_2
+        )
+        cls.test_like17 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_1
+        )
+        cls.test_like18 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_4
+        )
+        cls.test_like19 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_7
+        )
+        cls.test_like20 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_8
+        )
+        cls.test_like21 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_9
+        )
+        cls.test_like22 = Like.objects.create(
+            user=cls.test_user_3, post=cls.test_post_6
+        )
 
     def test_post_list(self):
 
@@ -191,7 +175,8 @@ class PostAPITestCase(APITestCase):
 
         # Bad request. Lack of "title".
         response2 = self.client.post(
-            reverse("post-list-create-api"), {"content": "Some conntent of New Test Post 2"}
+            reverse("post-list-create-api"),
+            {"content": "Some conntent of New Test Post 2"},
         )
 
         response3 = self.client.post(
@@ -550,7 +535,7 @@ class PostAPITestCase(APITestCase):
 
     def test_user_list(self):
 
-        queryset = CustomUser.objects.all().order_by('-last_request')
+        queryset = CustomUser.objects.all().order_by("-last_request")
 
         # Unauthorized
         response1 = self.client.get(reverse("user-list-create-api"))
@@ -574,36 +559,37 @@ class PostAPITestCase(APITestCase):
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
         self.assertEqual(serializer.data, response3.data["results"])
 
-
     def test_user_create(self):
 
         # Authorized
         response1 = self.client.post(
             reverse("user-list-create-api"),
             {
-                "username": "NewTestUser", 
-                "email": "somemail@gmail.com", 
+                "username": "NewTestUser",
+                "email": "somemail@gmail.com",
                 "password": "ribark8903",
                 "password2": "ribark8903",
             },
-            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
         self.assertEqual(response1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser")
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser"
+        )
 
         # Unauthorized, correct data
         response2 = self.client.post(
             reverse("user-list-create-api"),
             {
-                "username": "NewTestUser", 
-                "email": "somemail@gmail.com", 
+                "username": "NewTestUser",
+                "email": "somemail@gmail.com",
                 "password": "ribark8903",
                 "password2": "ribark8903",
-            }
+            },
         )
         serializer = UserSerializer(
-            CustomUser.objects.get(username="NewTestUser"), 
-            context={"request": response2.wsgi_request}
+            CustomUser.objects.get(username="NewTestUser"),
+            context={"request": response2.wsgi_request},
         )
         self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
         self.assertTrue(CustomUser.objects.get(username="NewTestUser"))
@@ -613,86 +599,94 @@ class PostAPITestCase(APITestCase):
         response3 = self.client.post(
             reverse("user-list-create-api"),
             {
-                "username": "NewTestUser2", 
-                "email": "somemail2@gmail.com", 
-                "password": "ribark8903cz"
-            }
+                "username": "NewTestUser2",
+                "email": "somemail2@gmail.com",
+                "password": "ribark8903cz",
+            },
         )
         self.assertEqual(response3.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
-    
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2"
+        )
+
         # Email missed
         response4 = self.client.post(
             reverse("user-list-create-api"),
             {
-                "username": "NewTestUser2", 
+                "username": "NewTestUser2",
                 "password": "ribark8903cz",
                 "password2": "ribark8903cz",
-            }
+            },
         )
         self.assertEqual(response4.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2"
+        )
 
         # Invalid email
         response5 = self.client.post(
             reverse("user-list-create-api"),
             {
                 "username": "NewTestUser2",
-                "email": "sdncsja.io", 
+                "email": "sdncsja.io",
                 "password": "ribark8903cz",
                 "password2": "ribark8903cz",
-            }
+            },
         )
         self.assertEqual(response5.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
-        
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2"
+        )
+
         # Passwords doesn't match
         response6 = self.client.post(
             reverse("user-list-create-api"),
             {
                 "username": "NewTestUser2",
-                "email": "sdncsja.io", 
+                "email": "sdncsja.io",
                 "password": "ribark8903cz",
                 "password2": "ribark8903",
-            }
+            },
         )
         self.assertEqual(response6.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2"
+        )
 
         # Passwords similar with username
         response7 = self.client.post(
             reverse("user-list-create-api"),
             {
                 "username": "NewTestUser2",
-                "email": "somemail2@gmail.com", 
+                "email": "somemail2@gmail.com",
                 "password": "newtestuser2",
                 "password2": "newtestuser2",
-            }
+            },
         )
         self.assertEqual(response7.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2")
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="NewTestUser2"
+        )
 
         # Unnessesary fields
         response8 = self.client.post(
             reverse("user-list-create-api"),
             {
                 "username": "NewTestUser2",
-                "email": "somemail2@gmail.com", 
+                "email": "somemail2@gmail.com",
                 "password": "ribark8903cz",
                 "password2": "ribark8903cz",
-                "sex": "Male"
-            }
+                "sex": "Male",
+            },
         )
         object = CustomUser.objects.get(username="NewTestUser2")
         serializer8 = UserSerializer(
-            object, 
-            context={"request": response2.wsgi_request}
+            object, context={"request": response2.wsgi_request}
         )
         self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
         self.assertFalse(getattr(object, "sex", False))
         self.assertRaises(FieldError, CustomUser.objects.get, sex="Male")
         self.assertEqual(serializer8.data, response8.data)
-
 
     def test_user_detail(self):
 
@@ -726,13 +720,12 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user2}",
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        
+
         # Unauthorized
         response = self.client.get(
             reverse("user-detail-update-destroy-api", args=[self.test_user_1.id]),
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
 
     def test_user_update(self):
         """
@@ -770,14 +763,16 @@ class PostAPITestCase(APITestCase):
                 "username": "TestUser1PUTed",
                 "email": "newemail@ukr.net",
             },
-            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
         serializer_after_update2 = UserDetailSerializer(
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(serializer_after_update1.data, serializer_after_update2.data)
+        self.assertNotEqual(
+            serializer_after_update1.data, serializer_after_update2.data
+        )
         self.assertEqual(serializer_after_update2.data["username"], "TestUser1PUTed")
         self.assertEqual(serializer_after_update2.data["email"], "newemail@ukr.net")
 
@@ -788,26 +783,27 @@ class PostAPITestCase(APITestCase):
                 "username": "TestUser1PUTedbyAdmin",
                 "email": "newemailadm@ukr.net",
             },
-            HTTP_AUTHORIZATION=f"JWT {self.access_token_admin}"
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_admin}",
         )
         serializer_after_update3 = UserDetailSerializer(
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(serializer_after_update2.data, serializer_after_update3.data)
-        self.assertEqual(serializer_after_update3.data["username"], "TestUser1PUTedbyAdmin")
+        self.assertNotEqual(
+            serializer_after_update2.data, serializer_after_update3.data
+        )
+        self.assertEqual(
+            serializer_after_update3.data["username"], "TestUser1PUTedbyAdmin"
+        )
         self.assertEqual(serializer_after_update3.data["email"], "newemailadm@ukr.net")
 
         ######PATCH
         # Authorized by owner, incorrect email
         response = self.client.patch(
             reverse("user-detail-update-destroy-api", args=[self.test_user_1.id]),
-            {
-                "username": "TestUser1PATCHed",
-                "email": "asdnaa1223"
-            },
-            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
+            {"username": "TestUser1PATCHed", "email": "asdnaa1223"},
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
         serializer_after_update4 = UserDetailSerializer(
             CustomUser.objects.get(id=self.test_user_1.id),
@@ -822,16 +818,18 @@ class PostAPITestCase(APITestCase):
             {
                 "username": "TestUser1PATCHed",
                 "email": "asdnaa1223@gmail.com",
-                "sex": "Female"
+                "sex": "Female",
             },
-            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
         serializer_after_update5 = UserDetailSerializer(
             CustomUser.objects.get(id=self.test_user_1.id),
             context={"request": response.wsgi_request},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(serializer_after_update4.data, serializer_after_update5.data)
+        self.assertNotEqual(
+            serializer_after_update4.data, serializer_after_update5.data
+        )
         self.assertEqual(serializer_after_update5.data["username"], "TestUser1PATCHed")
         self.assertEqual(serializer_after_update5.data["email"], "asdnaa1223@gmail.com")
         self.assertRaises(FieldError, CustomUser.objects.get, sex="Female")
@@ -839,17 +837,18 @@ class PostAPITestCase(APITestCase):
         # PASSWORD change by owner
         response = self.client.patch(
             reverse("user-detail-update-destroy-api", args=[self.test_user_1.id]),
-            {
-                "password": "fokker1234"
-            },
-            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}"
+            {"password": "fokker1234"},
+            HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
         # Please recall that self.test_user_1.password reffered to the virgin user on the test start
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(CustomUser.objects.get(id=self.test_user_1.id).password, self.test_user_1.password)
+        self.assertNotEqual(
+            CustomUser.objects.get(id=self.test_user_1.id).password,
+            self.test_user_1.password,
+        )
 
     def test_user_delete(self):
-          # Unauthorized
+        # Unauthorized
         response = self.client.delete(
             reverse("user-detail-update-destroy-api", args=[self.test_user_2.id])
         )
@@ -862,7 +861,9 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user2}",
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="TestUser2")
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="TestUser2"
+        )
 
         # Authorized by admin
         response = self.client.delete(
@@ -870,14 +871,14 @@ class PostAPITestCase(APITestCase):
             HTTP_AUTHORIZATION=f"JWT {self.access_token_admin}",
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertRaises(CustomUser.DoesNotExist, CustomUser.objects.get, username="TestUser3")
+        self.assertRaises(
+            CustomUser.DoesNotExist, CustomUser.objects.get, username="TestUser3"
+        )
 
     def test_jwt_authentication(self):
         # Create new user
         test_user_4 = CustomUser.objects.create_user(
-            email="testuser4@ukr.net", 
-            username="TestUser4", 
-            password="fokker12345"
+            email="testuser4@ukr.net", username="TestUser4", password="fokker12345"
         )
 
         # Login-api icorrect password
@@ -886,7 +887,7 @@ class PostAPITestCase(APITestCase):
             {
                 "username": test_user_4.username,
                 "password": "Kaskmcs12341",
-            }
+            },
         )
         self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -896,21 +897,19 @@ class PostAPITestCase(APITestCase):
             {
                 "username": test_user_4.username,
                 "password": "fokker12345",
-            }
+            },
         )
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
         # Verify that refresh token (and access token too) is valid
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": response2.data["refresh"]}
+            reverse("token_verify"), {"token": response2.data["refresh"]}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
 
         # incorrect token
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": "jsndvkajsdnvkajsnv"}
+            reverse("token_verify"), {"token": "jsndvkajsdnvkajsnv"}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -919,51 +918,41 @@ class PostAPITestCase(APITestCase):
             reverse("token-refresh-api"),
             {
                 "refresh": response2.data["refresh"],
-            }
+            },
         )
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
         self.assertTrue(response3.data["access"])
         self.assertTrue(response3.data["refresh"])
         # Check wether new refreshed refresh token is valid
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": response3.data["refresh"]}
+            reverse("token_verify"), {"token": response3.data["refresh"]}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
         # Check wether OLD refresh token is invalid
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": response2.data["refresh"]}
+            reverse("token_verify"), {"token": response2.data["refresh"]}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Token-recovery-api
         response = self.client.post(
-            reverse("token-recovery-api"),
-            {
-                "email": test_user_4.email
-            }
+            reverse("token-recovery-api"), {"email": test_user_4.email}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Get the new 'access' token from email which has been emailed to the user
         # It will be use by user to change password
         new_access_token = re.search(r"(?<='access': ).+", mail.outbox[0].body)
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": new_access_token.group()}
+            reverse("token_verify"), {"token": new_access_token.group()}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
         # Check wether OLD REFRESHED refresh token is invalid
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": response3.data["refresh"]}
+            reverse("token_verify"), {"token": response3.data["refresh"]}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
         # Check wether OLD-OLD refresh token is invalid
         verify_token = self.client.post(
-            reverse("token_verify"),
-            {"token": response2.data["refresh"]}
+            reverse("token_verify"), {"token": response2.data["refresh"]}
         )
         self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
-
-
