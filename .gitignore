@@ -142,6 +142,8 @@ media/
 runserver
 mm
 
-# PyCharm staff
+# PyCharm stuff
 .idea/
 
+# Redis stuff
+dump.rdb
