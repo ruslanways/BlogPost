@@ -165,7 +165,7 @@ class PostAPITestCase(DiaryAPITestCase):
     def test_post_update(self):
         """
         IMHO.
-        It's worth nothing that Post objects reachable with self.test_post_*
+        It's worth noting that Post objects reachable with self.test_post_*
         only accessibe for retrieving so they don't change their state.
         In case we need to see wether the object is changed we should retrieve it from the object manager.
         """
