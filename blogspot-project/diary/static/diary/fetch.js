@@ -10,6 +10,15 @@ if (document.getElementById("user")) {
     like.addEventListener("click", async function(evt) {
       evt.preventDefault();
       await fetch(this.getAttribute("href"));
+
+      // await fetch(this.getAttribute("href"), {
+      //   method: "POST",
+      //   body: JSON.stringify({
+      //     'post_id': this.getAttribute("href").slice(11,-1),
+      //   }),
+      // }
+      // );
+
       let content = this.innerHTML.trim().split(" ");
       if (content[0].charCodeAt(0) === 10084) {
         content[0] = "&#9825;";

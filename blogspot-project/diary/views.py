@@ -59,6 +59,8 @@ from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.reverse import reverse as reverse_rest
 from rest_framework_simplejwt.views import TokenRefreshView
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
@@ -375,8 +377,9 @@ class LikeDetailAPIView(generics.RetrieveAPIView):
     serializer_class = LikeDetailSerializer
 
 
-class LikeCreateDestroyAPIView(APIView):
+class LikeCreateDestroyAPIView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = LikeDetailSerializer
 
     # First version of view loginc.
     # def get(self, *args, **kwargs):
@@ -392,14 +395,35 @@ class LikeCreateDestroyAPIView(APIView):
     #         status = 204
     #     except Post.DoesNotExist:
     #         return Response({'status': "Post doesn't exist"}, status=404)
-
     #     return Response({reply: model_to_dict(like)}, status=status)
 
+
+    # def post(self, request, *args, **kwargs):
+    #     serializer = self.serializer_class(data=request.data)
+    #     serializer.is_valid()
+    #     serializer.save(user=self.request.user)
+
+    @extend_schema(
+        description='Grant like on post.<br>If post already liked - remove like (ulike it).',
+        responses={
+            201: inline_serializer(
+            name='Entities2', 
+            fields={
+                'like created': serializers.CharField(),
+            }),
+            204: inline_serializer(
+            name='Entities3', 
+            fields={
+                'like deleted': serializers.CharField(),
+            }),
+        }
+    )
     def get(self, *args, **kwargs):
         try:
             like_to_delete = Like.objects.get(
                 user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
             )
+            #like = self.serializer_class(copy.deepcopy(like_to_delete), context={'request': self.request})
             like = copy.deepcopy(like_to_delete)
             like_to_delete.delete()
             reply = "like deleted"
@@ -408,11 +432,23 @@ class LikeCreateDestroyAPIView(APIView):
             like = Like.objects.create(
                 user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
             )
+            # like = self.serializer_class(
+            #     data={
+            #         'user': self.request.user,
+            #         'post': Post.objects.get(pk=self.kwargs["post_id"]).get_absolute_url()
+            #     },
+            #     context={'request': self.request}
+            # )
+            # like.is_valid()
+            # print(like.errors)
+            # print(like.data)
+            # like.save()
             reply = "like created"
             status = 201
         except Post.DoesNotExist:
             return Response({"status": "Post doesn't exist"}, status=404)
         return Response({reply: model_to_dict(like)}, status=status)
+       #return Response({reply: like.data}, status=status)
 
 
 class MyTokenRefreshView(TokenRefreshView):
@@ -426,6 +462,8 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
     And the new (pair) will generate and email to user.
     """
 
+    serializer_class = TokenRecoverySerializer
+
     def post(self, request, *args, **kwargs):
 
         if len(request.data) != 1 or not request.data.get("email"):
@@ -433,7 +471,7 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
                 {"error": "please post email only"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = TokenRecoverySerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -513,7 +551,17 @@ class MyTokenObtainPairView(TokenObtainPairView):
         )
 
 
-class RootAPIView(APIView):
+class RootAPIView(generics.GenericAPIView):
+    @extend_schema(
+        responses={200: inline_serializer(
+            name='Entities', 
+            fields={
+                'posts': serializers.URLField(),
+                'users': serializers.URLField(),
+                'likes': serializers.URLField(),
+            }
+        )}
+    )
     def get(self, request):
         return Response(
             {

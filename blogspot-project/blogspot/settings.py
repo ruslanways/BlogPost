@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
+    'drf_spectacular',
 ]
 
 AUTH_USER_MODEL = 'diary.CustomUser'
@@ -197,7 +198,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication'
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -230,5 +232,24 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'BlogPost openApi3 documentation',
+    'DESCRIPTION': 'It is a simple web-application with interest posts and likes functionality.',
+    'CONTACT': {'email': 'ruslanways@gmail.com'},
+    'LICENSE': {'name': 'MIT License'},
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': '/api/v1/',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'AUTHENTICATION_WHITELIST': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
+    'TAGS': [
+        {'name': 'default', 'description': 'Root of all api'},
+        {'name': 'auth', 'description': 'All authorization system enpoints'},
+        {'name': 'likes', 'description': 'Operations with likes'},
+        {'name': 'posts', 'description': 'Posts enpoints'},
+        {'name': 'users', 'description': 'Users enpoints'},
+    ],
 }
 

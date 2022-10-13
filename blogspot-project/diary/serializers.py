@@ -1,4 +1,5 @@
 import copy
+from email.policy import default
 from pprint import pprint
 from rest_framework import serializers
 from .models import CustomUser, Like, Post
@@ -250,7 +251,7 @@ class LikeDetailSerializer(serializers.HyperlinkedModelSerializer):
         read_only=True, view_name="user-detail-update-destroy-api"
     )
     post = serializers.HyperlinkedRelatedField(
-        read_only=True, view_name="post-detail-api"
+       read_only=True, view_name="post-detail-api"
     )
 
     class Meta:
