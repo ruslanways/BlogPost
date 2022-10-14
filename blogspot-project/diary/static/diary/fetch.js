@@ -10,7 +10,7 @@ const likes = document.querySelectorAll(".like");
 // Update a color and number of heart
 async function makeLike(event) {
   event.preventDefault();
-  await fetch(this.href); // 'this' reffers to as addEventListener object
+  await fetch(this.href); // 'this' reffers to as addEventListener object abs url
   // Get current heart+number
   let content = this.innerHTML.trim().split(" ");
   // Change hear to opposite color and increment or decrement number
@@ -25,29 +25,23 @@ async function makeLike(event) {
 }
 
 // Add addEventListener to .like element
-let readyForLike = function (like) {
-  like.addEventListener("click", makeLike);
-};
+let readyForLike = like => like.addEventListener("click", makeLike);
 
 // Add addEventListener on all .like elements
-let onLikeClick = function () {
-  likes.forEach(readyForLike);
-};
+let onLikeClick = elm => elm.forEach(readyForLike);
 
 // If the user is authenticated - start likes functionality
-if (document.getElementById("user")) {
-  onLikeClick();
-}
+if (document.getElementById("user")) onLikeClick(likes);
 
 
 
 // Dynamically updates likes
-let updateLike = () => {
-  likes.forEach(async function (like) {
+let updateLike = elm => {
+  elm.forEach(async function (like) {
     const old_like = like.innerHTML.trim();
     const response = await fetch(
       "/likes_count_on_post/" + like.getAttribute("href").split("/")[3]
-    );
+    ); // Here we have used relative url
     const data = await response.text();
     if (old_like !== data) {
       like.innerHTML = data;
@@ -56,4 +50,4 @@ let updateLike = () => {
 };
 
 // Updates likes with interval of 3 sec
-setInterval(updateLike, 3000);
+setInterval(updateLike, 3000, likes);
