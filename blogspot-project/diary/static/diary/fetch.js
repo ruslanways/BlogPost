@@ -31,7 +31,7 @@ let readyForLike = like => like.addEventListener("click", makeLike);
 let onLikeClick = elm => elm.forEach(readyForLike);
 
 // If the user is authenticated - start likes functionality
-if (document.getElementById("user")) onLikeClick(likes);
+if (document.getElementById("user") && likes.length) onLikeClick(likes);
 
 
 
@@ -49,5 +49,5 @@ let updateLike = elm => {
   });
 };
 
-// Updates likes with interval of 3 sec
-setInterval(updateLike, 3000, likes);
+// Updates likes (if exists) with interval of 3 sec
+if (likes.length) setInterval(updateLike, 3000, likes);
