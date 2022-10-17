@@ -8,9 +8,19 @@ const likes = document.querySelectorAll(".like");
 
 // Send a get request to add or delete like
 // Update a color and number of heart
-async function makeLike(event) {
-  event.preventDefault();
-  await fetch(this.href); // 'this' reffers to as addEventListener object abs url
+function makeLike(evt) {
+  // Prevent default browser following link behaviour
+  // We could use not <a>, but then it would not be in the form of link-hand
+  evt.preventDefault();
+  try {
+    fetch(this.href); // 'this' reffers to as addEventListener object abs url
+  } catch(err) {
+    // If error happend while fetching - the error will show in console,
+    // but no like correction happend, because it automatically check in
+    // next updatelike function that updates relevant number of likes and heart filling
+    console.log(err);
+  }
+  // fetch(this.href); // 'this' reffers to as addEventListener object abs url
   // Get current heart+number
   let content = this.innerHTML.trim().split(" ");
   // Change hear to opposite color and increment or decrement number
