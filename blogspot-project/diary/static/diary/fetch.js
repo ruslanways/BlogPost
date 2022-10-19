@@ -50,7 +50,7 @@ let updateLike = elm => {
   elm.forEach(async function (like) {
     const old_like = like.innerHTML.trim();
     const response = await fetch(
-      "/likes_count_on_post/" + like.getAttribute("href").split("/")[3]
+      "/likes_count_on_post/" + like.href.match(/(\d+)\/$/)[1]
     ); // Here we have used relative url
     const data = await response.text();
     if (old_like !== data) {
