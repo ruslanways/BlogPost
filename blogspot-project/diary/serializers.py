@@ -1,5 +1,4 @@
 import copy
-from email.policy import default
 from pprint import pprint
 from rest_framework import serializers
 from .models import CustomUser, Like, Post
@@ -8,7 +7,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.utils import datetime_from_epoch
-
+from rest_framework.reverse import reverse
 
 class MyTokenRefreshSerializer(TokenRefreshSerializer):
     """
@@ -257,3 +256,28 @@ class LikeDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Like
         fields = "url", "id", "created", "user", "post"
+
+
+class LikeDetailSerializer2(serializers.HyperlinkedModelSerializer):
+    """
+    Here I've used PrimaryKeyRelatedField for post field due to problem:
+    HyperlinkedRelatedField waits a URL, not pk(id). 
+    But in PrimaryKeyRelatedField case we get not URL-style value,
+    so we need to override post field representation with .to_representation
+    """
+    url = serializers.HyperlinkedIdentityField(view_name="like-detail-api")
+    user = serializers.HyperlinkedRelatedField(
+        read_only=True, source="user.id", view_name="user-detail-update-destroy-api"
+    )
+    post = serializers.PrimaryKeyRelatedField(
+       queryset=Post.objects.all()
+    )
+    class Meta:
+        model = Like
+        fields = "url", "id", "created", "user", "post"
+
+    def to_representation(self, instance):
+        """Convert `post` from id to url."""
+        ret = super().to_representation(instance)
+        ret['post'] = reverse("post-detail-api", kwargs={"pk": ret['post']}, request=self.context["request"])
+        return ret

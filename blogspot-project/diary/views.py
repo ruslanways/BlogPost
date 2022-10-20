@@ -30,6 +30,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
 from rest_framework import generics, status
 from .serializers import (
+    LikeDetailSerializer2,
     LikeSerializer,
     LikeDetailSerializer,
     MyTokenRefreshSerializer,
@@ -377,7 +378,37 @@ class LikeDetailAPIView(generics.RetrieveAPIView):
     serializer_class = LikeDetailSerializer
 
 
+class LikeCreateDestroyAPIView2(generics.CreateAPIView):
+    """
+    Create/Destroy Like with POST request.
+    """
+    
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Like.objects.all()
+    serializer_class = LikeDetailSerializer2
+
+    def create(self, request, *args, **kwargs):
+        """
+        Override .create:
+        1) to add self.request.user to serializer user field,
+        2) to implement Destroying Like in case of duplicate Like exist
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.save(user=self.request.user)
+        except IntegrityError:
+            instance = self.queryset.get(post=serializer.validated_data["post"], user=self.request.user)
+            instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
 class LikeCreateDestroyAPIView(generics.GenericAPIView):
+    """
+    Create/Destroy Like with GET request.
+    """
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = LikeDetailSerializer
 
@@ -525,18 +556,14 @@ class MyTokenObtainPairView(TokenObtainPairView):
     in JS and store it within a variable (clousure scope) - I think it needs
     to make login-requests using AJAX(fetch)).
     """
-
     def post(self, request, *args, **kwargs):
-
         serializer = self.get_serializer(data=request.data)
-
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
-
         response = Response(
-            {"access": serializer.validated_data["access"]}, status=status.HTTP_200_OK
+            {"access_token": serializer.validated_data["access"]}, status=status.HTTP_200_OK
         )
         response.set_cookie(
             key="refresh_token",
@@ -544,11 +571,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
             httponly=True,
             samesite="Strict",
         )
-
-        access = {"access": serializer.validated_data["access"]}
-        return render(
-            request, template_name="diary/aftertoken.html", context=access, status=200
-        )
+        return response
 
 
 class RootAPIView(generics.GenericAPIView):

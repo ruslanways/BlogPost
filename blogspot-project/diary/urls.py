@@ -2,6 +2,8 @@ from django.urls import include, path
 from .views import (
     HomeView,
     HomeViewLikeOrdered,
+    LikeCreateDestroyAPIView2,
+    MyTokenObtainPairView,
     MyTokenRefreshView,
     RootAPIView,
 
@@ -68,15 +70,16 @@ urlpatterns = [
     path("api/v1/users/", UserListAPIView.as_view(), name="user-list-create-api"),
     path("api/v1/users/<int:pk>/", UserDetailAPIView.as_view(), name="user-detail-update-destroy-api"),
     path("api/v1/auth/login/", TokenObtainPairView.as_view(), name="login-api"),
+    path("api/v1/mylogin/", MyTokenObtainPairView.as_view(), name="my-login-api"),
     path('api/v1/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path("api/v1/auth/token-refresh/", MyTokenRefreshView.as_view(), name="token-refresh-api"),
     path("api/v1/auth/token-recovery/", TokenRecoveryAPIView.as_view(), name="token-recovery-api"),
 
     path("api/v1/posts/", PostAPIView.as_view(), name="post-list-create-api"),
-    path("api/v1/posts/<int:pk>", PostDetailAPIView.as_view(), name="post-detail-api"),
+    path("api/v1/posts/<int:pk>/", PostDetailAPIView.as_view(), name="post-detail-api"),
 
     path("api/v1/likes/", LikeAPIView.as_view(), name="like-list-api"),
-    path("api/v1/likes/<int:pk>", LikeDetailAPIView.as_view(), name="like-detail-api"),
-    path("api/v1/likes/createlike/<int:post_id>", LikeCreateDestroyAPIView.as_view(), name="like-create-api"),
+    path("api/v1/likes/<int:pk>/", LikeDetailAPIView.as_view(), name="like-detail-api"),
+    path("api/v1/likes/createlike/<int:post_id>/", LikeCreateDestroyAPIView.as_view(), name="like-create-api"),
+    path("api/v1/likes/add/", LikeCreateDestroyAPIView2.as_view(), name="like-create-destroy-post-api"),
 ]
-
