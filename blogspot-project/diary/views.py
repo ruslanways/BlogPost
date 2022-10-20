@@ -412,28 +412,6 @@ class LikeCreateDestroyAPIView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = LikeDetailSerializer
 
-    # First version of view loginc.
-    # def get(self, *args, **kwargs):
-    #     try:
-    #         like = Like.objects.create(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
-    #         reply = 'like created'
-    #         status = 201
-    #     except IntegrityError:
-    #         like_to_delete = Like.objects.get(user=self.request.user, post=Post.objects.get(pk=self.kwargs['post_id']))
-    #         like = copy.deepcopy(like_to_delete)
-    #         like_to_delete.delete()
-    #         reply = 'like deleted'
-    #         status = 204
-    #     except Post.DoesNotExist:
-    #         return Response({'status': "Post doesn't exist"}, status=404)
-    #     return Response({reply: model_to_dict(like)}, status=status)
-
-
-    # def post(self, request, *args, **kwargs):
-    #     serializer = self.serializer_class(data=request.data)
-    #     serializer.is_valid()
-    #     serializer.save(user=self.request.user)
-
     @extend_schema(
         description='Grant like on post.<br>If post already liked - remove like (ulike it).',
         responses={
@@ -454,7 +432,6 @@ class LikeCreateDestroyAPIView(generics.GenericAPIView):
             like_to_delete = Like.objects.get(
                 user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
             )
-            #like = self.serializer_class(copy.deepcopy(like_to_delete), context={'request': self.request})
             like = copy.deepcopy(like_to_delete)
             like_to_delete.delete()
             reply = "like deleted"
@@ -463,23 +440,11 @@ class LikeCreateDestroyAPIView(generics.GenericAPIView):
             like = Like.objects.create(
                 user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
             )
-            # like = self.serializer_class(
-            #     data={
-            #         'user': self.request.user,
-            #         'post': Post.objects.get(pk=self.kwargs["post_id"]).get_absolute_url()
-            #     },
-            #     context={'request': self.request}
-            # )
-            # like.is_valid()
-            # print(like.errors)
-            # print(like.data)
-            # like.save()
             reply = "like created"
             status = 201
         except Post.DoesNotExist:
             return Response({"status": "Post doesn't exist"}, status=404)
         return Response({reply: model_to_dict(like)}, status=status)
-       #return Response({reply: like.data}, status=status)
 
 
 class MyTokenRefreshView(TokenRefreshView):

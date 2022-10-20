@@ -87,4 +87,4 @@ let updateLike = elm => {
 };
 
 // Updates likes (if exists) with interval of 3 sec
-//if (likes.length) setInterval(updateLike, 3000, likes);
+if (likes.length) setInterval(updateLike, 3000, likes);
