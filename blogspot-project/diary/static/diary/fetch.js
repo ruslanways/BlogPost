@@ -3,6 +3,24 @@ using fetch-api to like posts
 by making GET-requests to Django LikeCreateView
 */
 
+// Get cookie for any needs (e.g. csrftoken)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+          }
+      }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
 // Get all like <div>'s elements to operate with
 const likes = document.querySelectorAll(".like");
 
@@ -13,7 +31,16 @@ function makeLike(evt) {
   // We could use not <a>, but then it would not be in the form of link-hand
   evt.preventDefault();
   try {
-    fetch(this.href); // 'this' reffers to as addEventListener object abs url
+    // First, I used GET method, but then decided to use POST because DB operations
+    //fetch(this.href); // 'this' reffers to as addEventListener object abs url
+    fetch("/api/v1/likes/add/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json;charset=utf-8",
+        "X-CSRFToken": csrftoken,
+      },
+      body: JSON.stringify({"post": this.href.match(/(\d+)\/$/)[1]})
+    });
   } catch(err) {
     // If error happend while fetching - the error will show in console,
     // but no like correction happend, because it automatically check in
@@ -60,4 +87,4 @@ let updateLike = elm => {
 };
 
 // Updates likes (if exists) with interval of 3 sec
-if (likes.length) setInterval(updateLike, 3000, likes);
+//if (likes.length) setInterval(updateLike, 3000, likes);
