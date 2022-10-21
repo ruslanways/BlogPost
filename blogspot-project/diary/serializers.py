@@ -258,7 +258,7 @@ class LikeDetailSerializer(serializers.HyperlinkedModelSerializer):
         fields = "url", "id", "created", "user", "post"
 
 
-class LikeDetailSerializer2(serializers.HyperlinkedModelSerializer):
+class LikeCreateDestroySerializer(serializers.HyperlinkedModelSerializer):
     """
     Here I've used PrimaryKeyRelatedField for post field due to problem:
     HyperlinkedRelatedField waits a URL, not pk(id). 

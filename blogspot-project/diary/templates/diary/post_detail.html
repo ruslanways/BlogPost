@@ -9,9 +9,11 @@
 <h3> 
 
     {% if user.is_authenticated and object in liked_by_user %}
-    <a a href="{% url 'like-add' object.id %}" class="like">&#10084; {{ object.like__count }}</a>
+    <a a href="{% url 'like-create-destroy-post-api' %}" id="{{ object.id }}" class="like">&#10084; {{ object.like__count }}</a>
+    {% elif user.is_authenticated %}
+    <a href="{% url 'like-create-destroy-post-api' %}" id="{{ object.id }}" class="like">&#9825; {{ object.like__count }}</a>
     {% else %}
-    <a href="{% url 'like-add' object.id %}" class="like">&#9825; {{ object.like__count }}</a>
+    <a href="{% url 'login' %}" id="{{ object.id }}" class="like">&#9825; {{ object.like__count }}</a>
     {% endif %}
 
     {{object.title}}

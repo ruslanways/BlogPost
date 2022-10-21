@@ -1,7 +1,5 @@
-import copy
 from django.shortcuts import redirect, resolve_url
-from django.urls import reverse_lazy, reverse
-from django.views import View
+from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import MultipleObjectMixin
@@ -13,8 +11,7 @@ from django.contrib.auth.views import (
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
 from .models import Post, CustomUser, Like
-from django.db.models import Count, Prefetch, F
-from django.forms.models import model_to_dict
+from django.db.models import Count
 from .forms import (
     AddPostForm,
     CustomPasswordResetForm,
@@ -25,12 +22,10 @@ from .forms import (
 )
 from django.conf import settings
 import redis
-from django.db.utils import IntegrityError
-from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.http import HttpResponse
 from rest_framework import generics, status
 from .serializers import (
-    LikeDetailSerializer2,
+    LikeCreateDestroySerializer,
     LikeSerializer,
     LikeDetailSerializer,
     MyTokenRefreshSerializer,
@@ -40,7 +35,6 @@ from .serializers import (
     UserDetailSerializer,
     UserSerializer,
 )
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from .permissions import (
@@ -58,7 +52,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.reverse import reverse as reverse_rest
+from rest_framework.reverse import reverse
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
@@ -252,45 +246,6 @@ class PostDeleteView(PostUpdateView, DeleteView):
         )
 
 
-class LikeCreateView(LoginRequiredMixin, View):
-    redirect_field_name = "/"
-
-    http_method_names = ["get"]
-
-    def get(self, *args, **kwargs):
-        try:
-            like = Like.objects.create(
-                user=self.request.user, post=Post.objects.get(pk=self.kwargs["pk"])
-            )
-            reply = "like created"
-            status = 201
-        except IntegrityError:
-            like_to_delete = Like.objects.get(
-                user=self.request.user, post=Post.objects.get(pk=self.kwargs["pk"])
-            )
-            like = copy.deepcopy(like_to_delete)
-            like_to_delete.delete()
-            reply = "like deleted"
-            status = 204
-        except Post.DoesNotExist:
-            raise Http404
-        return JsonResponse({reply: model_to_dict(like)}, status=status)
-
-
-def getLikes(request, post_id):
-    """
-    View to help update likes for updateLike function in fetch.js
-    """
-    post = Post.objects.get(pk=post_id)
-    count_likes = post.like_set.all()
-
-    if request.user.is_authenticated and (request.user.like_set.all() & count_likes):
-        heart = "&#10084;"
-    else:
-        heart = "&#9825;"
-    return HttpResponse(heart + " " + str(count_likes.count()))
-
-
 #######################################################################################################################
 # Rest api with DRF
 
@@ -378,14 +333,14 @@ class LikeDetailAPIView(generics.RetrieveAPIView):
     serializer_class = LikeDetailSerializer
 
 
-class LikeCreateDestroyAPIView2(generics.CreateAPIView):
+class LikeCreateDestroyAPIView(generics.CreateAPIView):
     """
     Create/Destroy Like with POST request.
     """
     
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Like.objects.all()
-    serializer_class = LikeDetailSerializer2
+    serializer_class = LikeCreateDestroySerializer
 
     def create(self, request, *args, **kwargs):
         """
@@ -395,56 +350,30 @@ class LikeCreateDestroyAPIView2(generics.CreateAPIView):
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            serializer.save(user=self.request.user)
-        except IntegrityError:
-            instance = self.queryset.get(post=serializer.validated_data["post"], user=self.request.user)
-            instance.delete()
+        # Checking whether like with post&user combination already exists
+        # If exists = delete like (==unlike) 
+        like = self.queryset.filter(post=serializer.validated_data["post"], user=self.request.user)
+        if like:
+            like[0].delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        else:
+            serializer.save(user=self.request.user)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class LikeCreateDestroyAPIView(generics.GenericAPIView):
+def getLikes(request, post_id):
     """
-    Create/Destroy Like with GET request.
+    View to help update likes for updateLike function in fetch.js
     """
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = LikeDetailSerializer
+    post = Post.objects.get(pk=post_id)
+    count_likes = post.like_set.all()
 
-    @extend_schema(
-        description='Grant like on post.<br>If post already liked - remove like (ulike it).',
-        responses={
-            201: inline_serializer(
-            name='Entities2', 
-            fields={
-                'like created': serializers.CharField(),
-            }),
-            204: inline_serializer(
-            name='Entities3', 
-            fields={
-                'like deleted': serializers.CharField(),
-            }),
-        }
-    )
-    def get(self, *args, **kwargs):
-        try:
-            like_to_delete = Like.objects.get(
-                user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
-            )
-            like = copy.deepcopy(like_to_delete)
-            like_to_delete.delete()
-            reply = "like deleted"
-            status = 204
-        except Like.DoesNotExist:
-            like = Like.objects.create(
-                user=self.request.user, post=Post.objects.get(pk=self.kwargs["post_id"])
-            )
-            reply = "like created"
-            status = 201
-        except Post.DoesNotExist:
-            return Response({"status": "Post doesn't exist"}, status=404)
-        return Response({reply: model_to_dict(like)}, status=status)
+    if request.user.is_authenticated and (request.user.like_set.all() & count_likes):
+        heart = "&#10084;"
+    else:
+        heart = "&#9825;"
+    return HttpResponse(heart + " " + str(count_likes.count()))
 
 
 class MyTokenRefreshView(TokenRefreshView):
@@ -495,7 +424,7 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
 
         refresh = RefreshToken.for_user(user)
 
-        link_to_change_user = reverse_rest(
+        link_to_change_user = reverse(
             "user-detail-update-destroy-api", request=request, args=[user.id]
         )
 
@@ -553,8 +482,8 @@ class RootAPIView(generics.GenericAPIView):
     def get(self, request):
         return Response(
             {
-                "posts": reverse_rest("post-list-create-api", request=request),
-                "users": reverse_rest("user-list-create-api", request=request),
-                "likes": reverse_rest("like-list-api", request=request),
+                "posts": reverse("post-list-create-api", request=request),
+                "users": reverse("user-list-create-api", request=request),
+                "likes": reverse("like-list-api", request=request),
             }
         )

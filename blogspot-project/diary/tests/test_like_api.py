@@ -52,16 +52,18 @@ class PostAPITestCase(DiaryAPITestCase):
         count = self.test_post_11.like_set.count()
 
         # Unauthorized
-        response1 = self.client.get(
-            reverse("like-create-api", args=[self.test_post_11.id])
+        response1 = self.client.post(
+            reverse("like-create-destroy-post-api"),
+            {"post": self.test_post_11.id},
         )
 
         self.assertEqual(response1.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(count, self.test_post_11.like_set.count())
 
         # Authorized by unliked user = CREATE the like
-        response2 = self.client.get(
-            reverse("like-create-api", args=[self.test_post_11.id]),
+        response2 = self.client.post(
+            reverse("like-create-destroy-post-api"),
+            {"post": self.test_post_11.id},
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
 
@@ -69,8 +71,9 @@ class PostAPITestCase(DiaryAPITestCase):
         self.assertEqual(count + 1, self.test_post_11.like_set.count())
 
         # Authorized by liked user = DELETE the like
-        response3 = self.client.get(
-            reverse("like-create-api", args=[self.test_post_11.id]),
+        response3 = self.client.post(
+            reverse("like-create-destroy-post-api"),
+            {"post": self.test_post_11.id},
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
 
@@ -78,10 +81,11 @@ class PostAPITestCase(DiaryAPITestCase):
         self.assertEqual(count, self.test_post_11.like_set.count())
 
         # Post doesn't exist
-        response3 = self.client.get(
-            reverse("like-create-api", args=[48]),
+        response3 = self.client.post(
+            reverse("like-create-destroy-post-api"),
+            {"post": 3948},
             HTTP_AUTHORIZATION=f"JWT {self.access_token_user1}",
         )
 
-        self.assertEqual(response3.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response3.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(count, self.test_post_11.like_set.count())

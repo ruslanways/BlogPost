@@ -1,6 +1,6 @@
 /*
 using fetch-api to like posts
-by making GET-requests to Django LikeCreateView
+by making POST-requests to Django LikeCreateDestroyAPIView
 */
 
 // Get cookie for any needs (e.g. csrftoken)
@@ -31,15 +31,14 @@ function makeLike(evt) {
   // We could use not <a>, but then it would not be in the form of link-hand
   evt.preventDefault();
   try {
-    // First, I used GET method, but then decided to use POST because DB operations
-    //fetch(this.href); // 'this' reffers to as addEventListener object abs url
-    fetch("/api/v1/likes/add/", {
+    // 'this' reffers to as addEventListener object abs url
+    fetch(this.href, {
       method: "POST",
       headers: {
         "Content-Type": "application/json;charset=utf-8",
         "X-CSRFToken": csrftoken,
       },
-      body: JSON.stringify({"post": this.href.match(/(\d+)\/$/)[1]})
+      body: JSON.stringify({"post": this.id})
     });
   } catch(err) {
     // If error happend while fetching - the error will show in console,
@@ -76,9 +75,7 @@ if (document.getElementById("user") && likes.length) onLikeClick(likes);
 let updateLike = elm => {
   elm.forEach(async function (like) {
     const old_like = like.innerHTML.trim();
-    const response = await fetch(
-      "/likes_count_on_post/" + like.href.match(/(\d+)\/$/)[1]
-    ); // Here we have used relative url
+    const response = await fetch("/likes_count_on_post/" + like.id);
     const data = await response.text();
     if (old_like !== data) {
       like.innerHTML = data;
