@@ -147,3 +147,6 @@ mm
 
 # Redis stuff
 dump.rdb
+
+# drf-spectacular stuff
+schema.yaml
