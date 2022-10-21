@@ -54,7 +54,7 @@ from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.views import TokenRefreshView
-from drf_spectacular.utils import extend_schema, inline_serializer
+from drf_spectacular.utils import extend_schema, inline_serializer,OpenApiExample
 from rest_framework import serializers
 
 # just try simple redis connection with practice purposes
@@ -477,7 +477,18 @@ class RootAPIView(generics.GenericAPIView):
                 'users': serializers.URLField(),
                 'likes': serializers.URLField(),
             }
-        )}
+        )},
+        examples=[
+            OpenApiExample(
+                'Response example',
+                value={
+                    'posts': "http://some.domain/api/v1/posts/",
+                    'users': "http://some.domain/api/v1/users/",
+                    'likes': "http://some.domain/api/v1/likes/",
+                },
+                response_only=True,
+            ),
+        ]
     )
     def get(self, request):
         return Response(

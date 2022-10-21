@@ -235,7 +235,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'BlogPost openApi3 documentation',
+    'TITLE': 'BlogPost OpenApi 3.0.3 documentation',
     'DESCRIPTION': 'It is a simple web-application with interest posts and likes functionality.',
     'CONTACT': {'email': 'ruslanways@gmail.com'},
     'LICENSE': {'name': 'MIT License'},
