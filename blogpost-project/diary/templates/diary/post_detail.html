@@ -1,0 +1,53 @@
+{% extends 'diary/base.html' %}
+
+{% block title %} post#{{object.pk}} {{ object.title }} {% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between;">
+<div>
+<h3> 
+
+    {% if user.is_authenticated and object in liked_by_user %}
+    <a a href="{% url 'like-create-destroy-post-api' %}" id="{{ object.id }}" class="like">&#10084; {{ object.like__count }}</a>
+    {% elif user.is_authenticated %}
+    <a href="{% url 'like-create-destroy-post-api' %}" id="{{ object.id }}" class="like">&#9825; {{ object.like__count }}</a>
+    {% else %}
+    <a href="{% url 'login' %}" id="{{ object.id }}" class="like">&#9825; {{ object.like__count }}</a>
+    {% endif %}
+
+    {{object.title}}
+</h3>
+</div>
+
+    <div>
+    {% if user.is_authenticated and object.author == user or user.is_staff %}
+    <a href="{% url 'post-update' object.id %}" class="btn btn-success btn-sm">Edit</a>
+    <a href="{% url 'post-delete' object.id %}" class="btn btn-danger btn-sm">Delete</a>
+    {% endif %}
+    </div>
+  
+</div>
+
+<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a>
+    <br>
+    {{ post.created|date }} at {{ post.created|time:"H:i" }}
+
+    {% if not object.published %}
+    <br>
+    <b>*unpublished</b>
+    {% endif %}
+</p>
+
+{% if object.image %}
+<div style="max-width: 500px;">
+<a href="{{ object.image.url }}">
+<img src="{{ object.image.url }}" alt="{{ object.title }} image"  class="img-fluid">
+</a>
+</div>
+{% endif %}
+
+<p>{{object.content|linebreaks}}</p>
+
+{% endblock %}
+
