@@ -22,11 +22,22 @@ class CustomUserCreationForm(UserCreationForm):
         widget=forms.EmailInput(attrs={"autocomplete": "email", 'class': "form-control"}),
     )
 
+    agree = forms.BooleanField(
+                            label='Agree',
+                            required = True,
+                            disabled = False,
+                            widget=forms.widgets.CheckboxInput(
+                                attrs={'class': 'checkbox-inline'}),
+                                help_text = "I allow to use Cookies on that web-site",
+                                error_messages ={'required':'Please check the box'}
+                            )
+
     class Meta(UserCreationForm.Meta):
         model = CustomUser
-        fields = ('username', 'email')
+        fields = ('username', 'email', 'agree')
         widgets = {
             'username': forms.TextInput(attrs={'class':'form-control'}),
+            'agree': forms.CheckboxInput(attrs={'class':'form-control'}),
         }
 
 
