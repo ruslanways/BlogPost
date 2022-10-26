@@ -1,24 +1,24 @@
 {% extends 'diary/base.html' %} 
 
-{% block title %} blogpost Home {% endblock %}
+{% block title %} postways {% endblock %}
 
 {% block content %} 
 
-<div class="center">
-<a href="{% url 'home' %}" class="link-success">&#9757; 
+<div class="left">
+<a href="{% url 'home' %}" style="color:black;"> 
     {% if ordering == 'fresh' %}
-    <b><u>Fresh posts</u></b>
+    <u>fresh</u>
     {% else %}
-    Fresh posts
+    fresh
     {% endif %}
 </a>
 &nbsp;&nbsp;|&nbsp;&nbsp;
-<a href="{% url 'home-like-ordering' %}" class="link-danger"> &#10084; 
+<a href="{% url 'home-like-ordering' %}" style="color:black;">  
     
     {% if ordering == 'liked' %}
-    <b><u>Most liked posts</u></b>
+    <u>popular</u>
     {% else %}
-    Most liked posts
+    popular
     {% endif %}
 </a>
 </div>
@@ -29,7 +29,7 @@
     
     <div>
         <a href="{% url 'post-detail' post.pk %}">
-            <h3>{{ post.title }}</h3>
+            <h3 style="word-break: break-word;">{{ post.title }}</h3>
         </a>
         <p class="author">
             <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>
