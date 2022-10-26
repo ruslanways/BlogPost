@@ -22,6 +22,7 @@ a:focus {
 
 .short-post {
     font-family: 'Nunito', sans-serif;
+    font-style: italic;
 }
 
 .errorlist {
@@ -47,6 +48,7 @@ a:focus {
 .post {
     display: flex;
     justify-content: space-between;
+    gap: 10px;
 }
 
 .post-img {
@@ -67,6 +69,10 @@ a:focus {
     margin: auto;
     padding: 10px;
     text-align: center;
+}
+
+.title {
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 991px) {

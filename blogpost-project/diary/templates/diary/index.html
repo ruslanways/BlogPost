@@ -29,7 +29,7 @@
     
     <div>
         <a href="{% url 'post-detail' post.pk %}">
-            <h3 style="word-break: break-word;">{{ post.title }}</h3>
+            <h3 class="title">{{ post.title }}</h3>
         </a>
         <p class="author">
             <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>

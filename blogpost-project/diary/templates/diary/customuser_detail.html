@@ -18,7 +18,7 @@
 {% for post in  page_obj %}
 <div class="post">
 <div>
-<a href="{% url 'post-detail' post.pk %}"><h3>{{ post.title }}</h3></a>
+<a href="{% url 'post-detail' post.pk %}"><h3 class="title">{{ post.title }}</h3></a>
 <p class="author">{{ post.created|date }} at {{ post.created|time:"H:i" }}
     {% if not post.published %}
     <br><b>*unpublished</b>

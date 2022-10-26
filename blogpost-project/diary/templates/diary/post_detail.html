@@ -4,10 +4,21 @@
 
 {% block content %}
 
-<div style="display: flex; justify-content: space-between;">
-<div>
-<h3> 
+<div style="max-width: 900px;" class="container">
 
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <h3 class="title"> {{object.title}} </h3>
+    </div>
+    <div>
+    {% if user.is_authenticated and object.author == user or user.is_staff %}
+    <a href="{% url 'post-update' object.id %}" class="btn btn-success btn-sm" style="width: 60px; margin-bottom: 1px;">Edit</a>
+    <a href="{% url 'post-delete' object.id %}" class="btn btn-danger btn-sm" style="width: 60px;">Delete</a>
+    {% endif %}
+    </div>
+</div>
+
+<div>
     {% if user.is_authenticated and object in liked_by_user %}
     <a a href="{% url 'like-create-destroy-post-api' %}" id="{{ object.id }}" class="like">&#10084; {{ object.like__count }}</a>
     {% elif user.is_authenticated %}
@@ -15,39 +26,28 @@
     {% else %}
     <a href="{% url 'login' %}" id="{{ object.id }}" class="like">&#9825; {{ object.like__count }}</a>
     {% endif %}
-
-    {{object.title}}
-</h3>
-</div>
-
-    <div>
-    {% if user.is_authenticated and object.author == user or user.is_staff %}
-    <a href="{% url 'post-update' object.id %}" class="btn btn-success btn-sm">Edit</a>
-    <a href="{% url 'post-delete' object.id %}" class="btn btn-danger btn-sm">Delete</a>
-    {% endif %}
-    </div>
-  
-</div>
-
-<p class="author"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a>
+    &nbsp;&nbsp;
+    <p class="author" style="display: inline-block;"><a href="{% url 'author-detail' post.author.pk %}">{{ object.author.username }}</a>
     <br>
     {{ post.created|date }} at {{ post.created|time:"H:i" }}
-
+   
     {% if not object.published %}
-    <br>
+    &nbsp;&nbsp;
     <b>*unpublished</b>
     {% endif %}
-</p>
+    </p>
+
+</div>
 
 {% if object.image %}
-<div style="max-width: 500px;">
 <a href="{{ object.image.url }}">
 <img src="{{ object.image.url }}" alt="{{ object.title }} image"  class="img-fluid">
 </a>
-</div>
 {% endif %}
 
 <p>{{object.content|linebreaks}}</p>
+
+</div>
 
 {% endblock %}
 
