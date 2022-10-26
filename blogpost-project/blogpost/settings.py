@@ -28,11 +28,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['postways.net', 'localhost']
 
-APPEND_SLASH = True
+APPEND_SLASH = False
 
 # Application definition
 INSTALLED_APPS = [
@@ -247,3 +247,8 @@ SPECTACULAR_SETTINGS = {
         {'name': 'users', 'description': 'Users enpoints'},
     ],
 }
+
+try:
+    from .local_settings import *
+except ImportError:
+    print("Production settings apply")

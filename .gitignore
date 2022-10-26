@@ -150,3 +150,6 @@ dump.rdb
 
 # drf-spectacular stuff
 schema.yaml
+
+# local developing settings
+local_settings.py
