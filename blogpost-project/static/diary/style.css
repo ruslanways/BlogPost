@@ -46,14 +46,15 @@ a:focus {
 }
 
 .post {
-    display: flex !important;
-    justify-content: space-between !important;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .post-img {
-    object-fit: cover !important;
-    width: 200px !important;
-    height: 200px !important;
+    object-fit: cover;
+    width: 200px;
+    height: 200px;
 }
 
 .post-content {
@@ -68,4 +69,14 @@ a:focus {
     margin: auto;
     padding: 10px;
     text-align: center;
+}
+
+.title {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 991px) {
+  .phone {
+    display: none;
   }
+}
