@@ -75,7 +75,7 @@ if (document.getElementById("user") && likes.length) onLikeClick(likes);
 let updateLike = elm => {
   elm.forEach(async function (like) {
     const old_like = like.innerHTML.trim();
-    const response = await fetch("/likes_count_on_post/" + like.id);
+    const response = await fetch("/likes_count_on_post/" + like.id + "/");
     const data = await response.text();
     if (old_like !== data) {
       like.innerHTML = data;
