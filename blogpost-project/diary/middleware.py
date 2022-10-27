@@ -3,6 +3,7 @@ import logging
 from django.utils import timezone
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.core.exceptions import PermissionDenied
 
 class UserLastRequestMiddleware:
     """
@@ -36,6 +37,8 @@ class UncaughtExceptionMiddleware:
         return response
     
     def process_exception(self, request, exception):
+        if isinstance(exception, PermissionDenied):
+            return render(request, '403.html', status=403)
         logger.error(f'Exception {type(exception)}, User: {request.user}, Page requested: {request.get_full_path()}')
         if request.path.startswith('/api/'):
             return JsonResponse({'Uncaught Exception': str(exception)}, status=500)

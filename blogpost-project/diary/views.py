@@ -1,5 +1,7 @@
-from django.shortcuts import redirect, resolve_url
+from django.shortcuts import render, redirect, resolve_url
 from django.urls import reverse_lazy
+from django.core.exceptions import PermissionDenied
+from django.views.defaults import permission_denied
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import MultipleObjectMixin
@@ -128,6 +130,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class AuthorListView(UserPassesTestMixin, ListView):
     template_name = "diary/customuser_list.html"
     permission_denied_message = "Access for staff only!"
+    raise_exception = False
 
     def test_func(self):
         return self.request.user.is_staff

@@ -28,11 +28,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost']
 
-APPEND_SLASH = False
+APPEND_SLASH = True
 
 # Application definition
 INSTALLED_APPS = [
