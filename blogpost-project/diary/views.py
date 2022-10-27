@@ -432,7 +432,7 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
         )
 
         send_mail(
-            "BLOGPOST Token recovery",
+            "Postways token recovery",
             f"Here are your new access token expires in 5 min."
             f"\n\n'access': {str(refresh.access_token)}\n\n"
             "You can use it to change password by Post-request to: "
