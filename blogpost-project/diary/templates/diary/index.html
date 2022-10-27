@@ -31,7 +31,7 @@
         <a href="{% url 'post-detail' post.pk %}">
             <h3 class="title">{{ post.title }}</h3>
         </a>
-        <p class="author">
+        <p class="author title">
             <a href="{% url 'author-detail' post.author.pk %}">{{ post.author.username }}</a>
             <br>
             {{post.created|date }} at {{ post.created|time:"H:i" }}
