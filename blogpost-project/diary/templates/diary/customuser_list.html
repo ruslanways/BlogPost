@@ -33,7 +33,7 @@
       {% for author in  object_list %}
       <tr>
         <th scope="row">{{ author.pk }}</th>
-        <td><a href="{% url 'author-detail' author.pk %}">{{ author.username }}</a></td>
+        <td><a href="{% url 'author-detail' author.pk %}" class="title">{{ author.username }}</a></td>
         <td>{{ author.date_joined|date:"d/m/Y" }}</td>
         <td> {{ author.post__count }} </td>
         <td> {{ author.like__count }} </td>

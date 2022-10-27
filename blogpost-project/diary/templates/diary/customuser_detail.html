@@ -23,7 +23,7 @@
     {% if not post.published %}
     <br><b>*unpublished</b>
     {% endif %}
-<p>
+<p class="title">
     <a href="{% url 'post-detail' post.pk %}" class="post-content">
     <span class="short-post">{{ post.content|truncatechars:100 }}</span>
     </a>
