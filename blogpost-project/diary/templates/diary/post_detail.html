@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% load diary_tags %}
+
 <div style="max-width: 700px;" class="container">
 
 <div style="display: flex; justify-content: space-between;">
@@ -46,7 +48,7 @@
 {% endif %}
 
 <div class="title">
-    <p>{{object.content|linebreaks|urlize}}</p>
+    <p>{{ object.content|linebreaks|urlizetrunc:40|url_target_blank }}</p>
 </div>
 
 </div>
