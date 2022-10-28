@@ -90,6 +90,9 @@ class AddPostForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class':'form-control'}),
             'published': forms.CheckboxInput(attrs={'class':'form-check-input'}),
         }
+        labels = {
+            'published': 'Publish'
+        }
 
 
 class UpdatePostForm(AddPostForm):
