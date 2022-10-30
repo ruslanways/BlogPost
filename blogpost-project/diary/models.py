@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.urls import reverse
-from .validators import MyUnicodeUsernameValidator
+from .validators import MyUnicodeUsernameValidator, profanity
 from django.utils.translation import gettext_lazy as _
 
 
@@ -43,9 +43,9 @@ class CustomUser(AbstractUser):
 
 
 class Post(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, validators=[profanity])
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = models.TextField(validators=[profanity])
     image = models.ImageField(upload_to='diary/images/', blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
