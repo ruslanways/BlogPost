@@ -58,6 +58,7 @@ from rest_framework.reverse import reverse
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.utils import extend_schema, inline_serializer,OpenApiExample
 from rest_framework import serializers
+from .tasks import send_email_task
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
@@ -431,16 +432,8 @@ class TokenRecoveryAPIView(generics.GenericAPIView):
             "user-detail-update-destroy-api", request=request, args=[user.id]
         )
 
-        send_mail(
-            "Postways token recovery",
-            f"Here are your new access token expires in 5 min."
-            f"\n\n'access': {str(refresh.access_token)}\n\n"
-            "You can use it to change password by Post-request to: "
-            f"{link_to_change_user}"
-            "\n\nTherefore you could obtain new tokens pair by logging.",
-            None,
-            [user.email],
-        )
+        # invoke celery task
+        send_email_task.delay(link_to_change_user, str(refresh.access_token), user.email)
 
         return Response({"Recovery email send": "Success"}, status=status.HTTP_200_OK)
 
