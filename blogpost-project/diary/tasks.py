@@ -30,7 +30,7 @@ def send_week_report():
 
     send_mail(
         "Postways week report",
-        "Hi admin😉"
+        "Hi admin."
         "\n\nFor the last week 'Postways' got\n\n"
         f"new users: {users}\n"
         f"new posts: {posts}\n"
