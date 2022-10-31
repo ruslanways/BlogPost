@@ -2,7 +2,6 @@ from django.core.mail import send_mail
 from celery import shared_task
 
 
-
 @shared_task()
 def send_email_task(link_to_change_user, token, user_email):
     """Sends an email when the feedback form has been submitted."""
@@ -16,3 +15,4 @@ def send_email_task(link_to_change_user, token, user_email):
             None,
             [user_email],
         )
+
