@@ -11,7 +11,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'week-report': {
         'task': 'diary.tasks.send_week_report',
-        'schedule': crontab(hour=9, minute=40, day_of_week=0),
+        'schedule': crontab(hour=9, minute=40, day_of_week=1),
     },
 }
 
