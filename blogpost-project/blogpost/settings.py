@@ -30,7 +30,7 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost']
+ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost', '3.73.45.193']
 
 APPEND_SLASH = True
 
