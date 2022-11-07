@@ -62,7 +62,7 @@ from .tasks import send_email_task
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
-redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+redis_client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=3)
 
 
 class HomeView(ListView):

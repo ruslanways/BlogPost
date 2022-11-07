@@ -7,4 +7,3 @@ class DiaryConfig(AppConfig):
 
     def ready(self):
         from . import signals
-        

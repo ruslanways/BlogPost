@@ -30,6 +30,20 @@ function makeLike(evt) {
   // Prevent default browser following link behaviour
   // We could use not <a>, but then it would not be in the form of link-hand
   evt.preventDefault();
+
+  // fetch(this.href); // 'this' reffers to as addEventListener object abs url
+  // Get current heart+number
+  let content = this.innerHTML.trim().split(" ");
+  // Change hear to opposite color and increment or decrement number
+  if (content[0].charCodeAt(0) === 10084) {
+    content[0] = "&#9825;";
+    // --content[1];
+  } else {
+    content[0] = "&#10084;";
+    // ++content[1];
+  }
+  this.innerHTML = `${content[0]} ${content[1]}`;
+
   try {
     // 'this' reffers to as addEventListener object abs url
     fetch(this.href, {
@@ -46,18 +60,6 @@ function makeLike(evt) {
     // next updatelike function that updates relevant number of likes and heart filling
     console.log(err);
   }
-  // fetch(this.href); // 'this' reffers to as addEventListener object abs url
-  // Get current heart+number
-  let content = this.innerHTML.trim().split(" ");
-  // Change hear to opposite color and increment or decrement number
-  if (content[0].charCodeAt(0) === 10084) {
-    content[0] = "&#9825;";
-    --content[1];
-  } else {
-    content[0] = "&#10084;";
-    ++content[1];
-  }
-  this.innerHTML = `${content[0]} ${content[1]}`;
 }
 
 // Add addEventListener to .like element
@@ -84,4 +86,33 @@ let updateLike = elm => {
 };
 
 // Updates likes (if exists) with interval of 3 sec
-if (likes.length) setInterval(updateLike, 3000, likes);
+// if (likes.length) setInterval(updateLike, 3000, likes);
+
+let url = `ws://${window.location.host}/ws/socket-server/`;
+
+const likeSocket = new WebSocket(url);
+
+let posts_on_page = [];
+for (let like of likes) {
+  posts_on_page.push(+like.id);
+}
+
+// likeSocket.onopen = function(e) {
+//   likeSocket.send(JSON.stringify({
+//     'message': posts_on_page
+//   }))
+// }
+
+likeSocket.onmessage = function(e) {
+  let data = JSON.parse(e.data);
+  console.log(data);
+  if (data["message"].split(",")[0] in posts_on_page) {
+    let like = document.getElementById(data["message"].split(",")[0]);
+    const old_heart = like.innerHTML.split(" ")[0];
+    const old_like = like.innerHTML.split(" ")[1];
+    const new_like = data["message"].split(",")[1];
+    if (old_like !== new_like) {
+      like.innerHTML = old_heart+" "+new_like;
+    }
+  }
+};
