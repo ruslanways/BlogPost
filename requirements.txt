@@ -1,3 +1,6 @@
+channels==4.0.0
+channels-redis==4.0.0
+daphne==4.0.0
 amqp==5.1.1
 asgiref==3.5.2
 async-timeout==4.0.2

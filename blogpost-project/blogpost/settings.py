@@ -13,10 +13,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 # use .env file to load environmental variables for secret key, passwords and so on..
-load_dotenv()
+#load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,17 +25,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY', ' ')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost', '3.73.45.193']
+#ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost', '3.73.45.193']
+ALLOWED_HOSTS = ["localhost"]
 
 APPEND_SLASH = True
 
+ASGI_APPLICATION = 'blogpost.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -95,13 +109,24 @@ WSGI_APPLICATION = 'blogpost.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'blogpost_db',
+#         'USER': 'blogpost_user',
+#         'PASSWORD': os.environ['POSTGRES_BLOGPOST_USER_PASSWORD'],
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'blogpost_db',
-        'USER': 'blogpost_user',
-        'PASSWORD': os.environ['POSTGRES_BLOGPOST_USER_PASSWORD'],
-        'HOST': 'localhost',
+        'NAME': os.environ.get('POSTGRES_NAME'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'HOST': os.environ.get('POSTGRES_HOST'),
         'PORT': '5432',
     }
 }
@@ -176,14 +201,18 @@ MEDIA_ROOT = BASE_DIR / 'media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_USE_SSL = True
 EMAIL_PORT = 465
-EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
-EMAIL_HOST_USER = 'admin@postways.net'
-DEFAULT_FROM_EMAIL = 'admin@postways.net'
+# EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
+# EMAIL_HOST_USER = 'admin@postways.net'
+# DEFAULT_FROM_EMAIL = 'admin@postways.net'
+EMAIL_HOST = 'mail.adm.tools'
+EMAIL_HOST_USER = 'contact@grado.lviv.ua'
+DEFAULT_FROM_EMAIL = 'contact@grado.lviv.ua'
 
-REDIS_HOST = 'localhost'
+
+REDIS_HOST = 'redis'
 REDIS_PORT = 6379
 
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"

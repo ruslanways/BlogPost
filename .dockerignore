@@ -1,0 +1,8 @@
+.git
+.env
+.idea
+.vscode
+dump.rdb
+mm
+runserver
+venv/

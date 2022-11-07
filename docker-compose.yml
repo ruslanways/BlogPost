@@ -1,27 +1,39 @@
-version: "3.9"
-   
 services:
   db:
     image: postgres
     volumes:
-      - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - ./postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./.env
   redis:
     image: redis
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      /bin/bash -c 'python manage.py wait_for_db &&
+                    python manage.py makemigrations &&
+                    python manage.py migrate &&
+                    python manage.py runserver 0.0.0.0:8000'
     volumes:
-      - .:/app
+      - ./blogpost-project:/app/blogpost-project
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - ./.env
     depends_on:
       - db
       - redis
+  celery:
+    restart: always
+    build: .
+    command: >
+      /bin/bash -c 'useradd ${USER_CELERY} &&
+                    celery -A blogpost worker -l info --uid ${USER_CELERY} &&
+                    celery -A blogpost beat -l info --uid ${USER_CELERY}'
+    volumes:
+      - ./blogpost-project:/app/blogpost-project
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+      - web
