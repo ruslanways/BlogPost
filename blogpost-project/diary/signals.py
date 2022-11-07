@@ -7,17 +7,17 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
-channel_layer = get_channel_layer()
+# channel_layer = get_channel_layer()
 
-@receiver(post_save, sender=Like)
-def new_like(sender, instance, **kwargs):
-    async_to_sync(channel_layer.group_send)(
-        'likes',
-        {
-            "type": "chat_message", 
-            "message": "1212341324, 213413252345"
-        }
-    )
+# @receiver(post_save, sender=Like)
+# def new_like(sender, instance, **kwargs):
+#     async_to_sync(channel_layer.group_send)(
+#         'likes',
+#         {
+#             "type": "chat_message", 
+#             "message": "1212341324, 213413252345"
+#         }
+#     )
 
 # @receiver(post_delete, sender=Like)
 # def new_like(sender, instance, **kwargs):
