@@ -356,12 +356,35 @@ class LikeCreateDestroyAPIView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         # Checking whether like with post&user combination already exists
         # If exists = delete like (==unlike) 
-        like = self.queryset.filter(post=serializer.validated_data["post"], user=self.request.user)
+        post=serializer.validated_data["post"]
+        user=self.request.user
+        like = self.queryset.filter(post=post, user=user)
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        channel_layer = get_channel_layer()
         if like:
             like[0].delete()
+            async_to_sync(channel_layer.group_send)(
+                'likes',
+                {
+                    "type": "like.message", 
+                    "post_id": str(post.id),
+                    "like_count": str(post.like_set.count()),
+                    "user_id": user.id,
+                }
+            )
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             serializer.save(user=self.request.user)
+            async_to_sync(channel_layer.group_send)(
+                'likes',
+                {
+                   "type": "like.message", 
+                    "post_id": str(post.id),
+                    "like_count": str(post.like_set.count()),
+                    "user_id": user.id,
+                }
+            )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

@@ -9,6 +9,8 @@ services:
       - ./.env
   redis:
     image: redis
+    expose:
+      - 6379
   web:
     build: .
     command: >
@@ -17,8 +19,7 @@ services:
                     python manage.py makemigrations --noinput &&
                     python manage.py migrate --noinput &&
                     python manage.py collectstatic --noinput &&
-                    python manage.py runserver 0.0.0.0:8000'
-
+                    daphne -b 0.0.0.0 -p 8000 blogpost.asgi:application'
     volumes:
       - static_data:/app/blogpost-project/static
     expose:
