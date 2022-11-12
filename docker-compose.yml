@@ -1,29 +1,25 @@
 services:
   db:
-    image: postgres
+    restart: on-failure:5
+    image: postgres:14.6
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    expose:
-      - 5432
     env_file:
       - ./.env
   redis:
-    image: redis
-    expose:
-      - 6379
+    restart: on-failure:5
+    image: redis:7.0.5
   web:
+    restart: on-failure:5
     build: .
     command: >
       /bin/bash -c 'python manage.py wait_for_db &&
-                    python manage.py migrate --noinput &&
                     python manage.py makemigrations --noinput &&
                     python manage.py migrate --noinput &&
                     python manage.py collectstatic --noinput &&
                     gunicorn -b 0.0.0.0:8000 -w 3 blogpost.wsgi:application'
     volumes:
       - workdir:/app/blogpost-project/
-      - static_data:/app/blogpost-project/static
-      - media_data:/app/blogpost-project/media
     expose:
       - 8000
     env_file:
@@ -32,6 +28,7 @@ services:
       - db
       - redis
   channels:
+    restart: on-failure:5
     build: .
     command: >
       /bin/bash -c 'daphne -b 0.0.0.0 -p 8001 blogpost.asgi:application'
@@ -41,40 +38,30 @@ services:
       - ./.env
     volumes:
       - workdir:/app/blogpost-project/
-      - static_data:/app/blogpost-project/static
-      - media_data:/app/blogpost-project/media
     depends_on:
-      - db
-      - redis
       - web
   celery:
-    restart: always
+    restart: on-failure:5
     build: .
     command: >
       /bin/bash -c 'celery -A blogpost worker -l info &&
                     celery -A blogpost beat -l info'
     volumes:
-      - celery_data:/app/blogpost-project
+      - workdir:/app/blogpost-project
     env_file:
       - ./.env
     depends_on:
-      - redis
       - web
   nginx:
     image: nginx
-    restart: always
+    restart: on-failure:5
     volumes: 
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_data:/app/blogpost-project/static
-      - media_data:/app/blogpost-project/media
+      - workdir:/app/blogpost-project/
     ports:
       - "80:80"
     depends_on:
-      - web
       - channels
 volumes:
   postgres_data:
-  static_data:
-  media_data:
-  celery_data:
   workdir:

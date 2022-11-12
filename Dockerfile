@@ -6,3 +6,6 @@ COPY . /app/
 WORKDIR /app/blogpost-project
 RUN pip install --upgrade pip
 RUN pip install -r ../requirements.txt
+RUN useradd admin
+RUN chown -R admin:admin .
+USER admin:admin

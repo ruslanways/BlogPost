@@ -17,8 +17,10 @@ class MyUnicodeUsernameValidator(UnicodeUsernameValidator):
 def profanity(content):
     with open(Path(__file__).resolve().parent / "profanity/bad-words.txt") as f:
         profanity = f.read().split()
-    if set(profanity) & set([word.strip(string.punctuation) for word in content.lower().split()]):
+    profanity_check = set(profanity) & set([word.strip(string.punctuation) for word in content.lower().split()])
+    print(profanity_check)
+    if profanity_check:
         raise ValidationError(
-            _('Using profanity prohibited, please correct the content!'),
+            _(f'Using profanity {profanity_check} prohibited, please correct the content!'),
             code='invalid',
         )
