@@ -153,3 +153,6 @@ schema.yaml
 
 # local developing settings
 local_settings.py
+
+# collected static files
+blogpost-project/static/
