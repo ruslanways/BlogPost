@@ -13,10 +13,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 # use .env file to load environmental variables for secret key, passwords and so on..
-#load_dotenv()
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,18 +30,18 @@ SECRET_KEY = os.environ.get('SECRET_KEY', ' ')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-#ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost', '3.73.45.193']
-ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = ['postways.net', 'www.postways.net', 'localhost', '3.73.45.193']
 
 APPEND_SLASH = True
 
+WSGI_APPLICATION = 'blogpost.wsgi.application'
 ASGI_APPLICATION = 'blogpost.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [("localhost", 6379)],
         },
     },
 }
@@ -104,29 +104,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'blogpost.wsgi.application'
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'blogpost_db',
-#         'USER': 'blogpost_user',
-#         'PASSWORD': os.environ['POSTGRES_BLOGPOST_USER_PASSWORD'],
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('POSTGRES_NAME'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST'),
+        'NAME': 'blogpost_db',
+        'USER': 'blogpost_user',
+        'PASSWORD': os.environ.get('POSTGRES_BLOGPOST_USER_PASSWORD'),
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
@@ -135,18 +122,10 @@ DATABASES = {
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 LOGGING = {
@@ -179,11 +158,8 @@ LOGGING = {
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
@@ -204,15 +180,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_USE_SSL = True
 EMAIL_PORT = 465
-# EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
-# EMAIL_HOST_USER = 'admin@postways.net'
-# DEFAULT_FROM_EMAIL = 'admin@postways.net'
-EMAIL_HOST = 'mail.adm.tools'
-EMAIL_HOST_USER = 'contact@grado.lviv.ua'
-DEFAULT_FROM_EMAIL = 'contact@grado.lviv.ua'
+EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
+EMAIL_HOST_USER = 'admin@postways.net'
+DEFAULT_FROM_EMAIL = 'admin@postways.net'
 
 
-REDIS_HOST = 'redis'
+REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"

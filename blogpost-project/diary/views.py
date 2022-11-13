@@ -59,6 +59,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.utils import extend_schema, inline_serializer,OpenApiExample
 from rest_framework import serializers
 from .tasks import send_email_task
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # just try simple redis connection with practice purposes
 # look to AuthorListView with implementation
@@ -359,8 +361,6 @@ class LikeCreateDestroyAPIView(generics.CreateAPIView):
         post=serializer.validated_data["post"]
         user=self.request.user
         like = self.queryset.filter(post=post, user=user)
-        from channels.layers import get_channel_layer
-        from asgiref.sync import async_to_sync
         channel_layer = get_channel_layer()
         if like:
             like[0].delete()
