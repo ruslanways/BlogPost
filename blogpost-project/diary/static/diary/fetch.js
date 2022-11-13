@@ -13,7 +13,7 @@ if (document.getElementById("user") && likes.length) {
 
 // Create a WebSocket for live update likes
 const likeSocket = new WebSocket(
-  `ws://${window.location.host}/ws/socket-server/`
+  `wss://${window.location.host}/ws/socket-server/`
 );
 // Get post.id exists on a current page
 const posts_on_page = [];
