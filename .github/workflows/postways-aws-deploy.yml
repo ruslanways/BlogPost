@@ -1,0 +1,19 @@
+# make automatic deploying 'Postways' changes to AWS EC2 running instance
+
+name: postways_changes_deploy_AWS
+
+on:
+  push:
+    branches:
+      - main
+      
+jobs:
+
+  push_to_main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Hello Message
+      - run : echo "Hello, World from GHA."
+      
+      
+  
