@@ -12,7 +12,7 @@ jobs:
   push_to_main:
     runs-on: ubuntu-latest
     steps:
-      - name: Print Hello Message
+      - name: git pull from remote repo
         env : 
           PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
           HOSTNAME   : ${{ secrets.HOSTNAME }}
@@ -20,7 +20,7 @@ jobs:
         
         run : |
           echo "$PRIVATE_KEY" > MyFirstKeyPair.pem && chmod 400 MyFirstKeyPair.pem
-          ssh -i "MyFirstKeyPair.pem" ${USER_NAME}@${HOSTNAME}
-          'cd BlogPost/ && git pull origin main'
+          ssh -i MyFirstKeyPair.pem ${USER_NAME}@${HOSTNAME} '
+            cd BlogPost/ && git pull origin main
+          '
       
-  
