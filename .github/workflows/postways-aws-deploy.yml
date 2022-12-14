@@ -19,7 +19,7 @@ jobs:
           USER_NAME  : ${{ secrets.USER_NAME }}
         
         run : |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 MyFirstKeyPair.pem
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             cd BlogPost/ && git pull origin main
           '
