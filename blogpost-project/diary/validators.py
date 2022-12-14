@@ -14,24 +14,13 @@ class MyUnicodeUsernameValidator(UnicodeUsernameValidator):
     )
 
 
-# First version of profanity validator
-# def profanity(content):
-#     with open(Path(__file__).resolve().parent / "profanity/bad-words.txt") as f:
-#         profanity = f.read().split()
-#     profanity_check = set(profanity) & set([word.strip(string.punctuation) for word in content.lower().split()])
-#     print(profanity_check)
-#     if profanity_check:
-#         raise ValidationError(
-#             _(f'Using profanity {profanity_check} prohibited, please correct the content!'),
-#             code='invalid',
-#         )
-
 def profanity(content):
     with open(Path(__file__).resolve().parent / "profanity/bad-words.txt") as f:
-        profanity = f.read().split('\n')
-    for word_set in profanity:
-        if content.lower().find(word_set) != -1:
-            raise ValidationError(
-            _(f"Using profanity '{word_set}' prohibited, please correct the content!"),
+        profanity = f.read().split()
+    profanity_check = set(profanity) & set([word.strip(string.punctuation) for word in content.lower().split()])
+    print(profanity_check)
+    if profanity_check:
+        raise ValidationError(
+            _(f'Using profanity {profanity_check} prohibited, please correct the content!'),
             code='invalid',
         )
