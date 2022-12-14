@@ -20,7 +20,7 @@ jobs:
         
         run : |
           echo "$PRIVATE_KEY" > MyFirstKeyPair.pem && chmod 400 MyFirstKeyPair.pem
-          ssh -o StrictHostKeyChecking=no -i MyFirstKeyPair.pem ${USER_NAME}@${HOSTNAME} '
+          ssh -o StrictHostKeyChecking=no -i "MyFirstKeyPair.pem" ${USER_NAME}@${HOSTNAME} '
             cd BlogPost/ && git pull origin main
           '
       
