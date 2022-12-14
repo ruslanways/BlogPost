@@ -9,7 +9,7 @@ on:
       
 jobs:
 
-  push_to_main:
+  pull_from_main:
     runs-on: ubuntu-latest
     steps:
       - name: git pull from remote repo
@@ -19,8 +19,8 @@ jobs:
           USER_NAME  : ${{ secrets.USER_NAME }}
         
         run : |
-          echo "$PRIVATE_KEY" > MyFirstKeyPair.pem && chmod 600 MyFirstKeyPair.pem
-          ssh -o StrictHostKeyChecking=no -i "MyFirstKeyPair.pem" ${USER_NAME}@${HOSTNAME} '
+          echo "$PRIVATE_KEY" > private_key && chmod 600 MyFirstKeyPair.pem
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             cd BlogPost/ && git pull origin main
           '
       
