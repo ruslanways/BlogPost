@@ -36,7 +36,7 @@ jobs:
         run: |
           cd blogpost-project/blogpost
           echo "${{ secrets.DJANGO_ENV_FILE }}" > .env
-          echo "${{ secrets.LOCAL_S }}" > local_settings.py
+          echo "${{ secrets.LOCAL_SETTINGS }}" > local_settings.py
           cd ..
           python manage.py test
 
