@@ -20,8 +20,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: run server and run tests
-        run:  python manage.py test
+      - name: run tests
+        run: |
+          cd blogpost-project/blogpost
+          echo "${{ secrets.DJANGO_ENV_FILE }} > .env"
+          python manage.py test
 
 
   # pull_from_main:
