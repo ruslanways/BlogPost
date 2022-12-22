@@ -12,7 +12,6 @@ from django.core import mail
 
 class PostAPITestCase(DiaryAPITestCase):
 
-
     def test_jwt_authentication(self):
         # Create new user
         test_user_4 = CustomUser.objects.create_user(
@@ -72,25 +71,25 @@ class PostAPITestCase(DiaryAPITestCase):
         )
         self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Token-recovery-api
-        response = self.client.post(
-            reverse("token-recovery-api"), {"email": test_user_4.email}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Get the new 'access' token from email which has been emailed to the user
-        # It will be use by user to change password
-        new_access_token = re.search(r"(?<='access': ).+", mail.outbox[0].body)
-        verify_token = self.client.post(
-            reverse("token_verify"), {"token": new_access_token.group()}
-        )
-        self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
-        # Check wether OLD REFRESHED refresh token is invalid
-        verify_token = self.client.post(
-            reverse("token_verify"), {"token": response3.data["refresh"]}
-        )
-        self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
-        # Check wether OLD-OLD refresh token is invalid
-        verify_token = self.client.post(
-            reverse("token_verify"), {"token": response2.data["refresh"]}
-        )
-        self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
+        # # Token-recovery-api
+        # response = self.client.post(
+        #     reverse("token-recovery-api"), {"email": test_user_4.email}
+        # )
+        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # # Get the new 'access' token from email which has been emailed to the user
+        # # It will be use by user to change password
+        # new_access_token = re.search(r"(?<='access': ).+", mail.outbox[0].body)
+        # verify_token = self.client.post(
+        #     reverse("token_verify"), {"token": new_access_token.group()}
+        # )
+        # self.assertEqual(verify_token.status_code, status.HTTP_200_OK)
+        # # Check wether OLD REFRESHED refresh token is invalid
+        # verify_token = self.client.post(
+        #     reverse("token_verify"), {"token": response3.data["refresh"]}
+        # )
+        # self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
+        # # Check wether OLD-OLD refresh token is invalid
+        # verify_token = self.client.post(
+        #     reverse("token_verify"), {"token": response2.data["refresh"]}
+        # )
+        # self.assertEqual(verify_token.status_code, status.HTTP_400_BAD_REQUEST)
