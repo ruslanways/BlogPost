@@ -24,6 +24,7 @@ jobs:
         run: |
           cd blogpost-project/blogpost
           echo "${{ secrets.DJANGO_ENV_FILE }} > .env"
+          cd ..
           python manage.py test
 
 
