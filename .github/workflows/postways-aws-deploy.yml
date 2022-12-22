@@ -41,7 +41,6 @@ jobs:
           python manage.py test
 
 
-
   # pull_from_main:
   #   runs-on: ubuntu-latest
   #   steps:
