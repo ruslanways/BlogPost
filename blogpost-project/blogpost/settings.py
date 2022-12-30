@@ -179,8 +179,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_USE_SSL = True
-EMAIL_PORT = 465
-EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
+EMAIL_PORT = 587
+#EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
+EMAIL_HOST = 'smtp.mail.me.com'
 EMAIL_HOST_USER = 'admin@postways.net'
 DEFAULT_FROM_EMAIL = 'admin@postways.net'
 
