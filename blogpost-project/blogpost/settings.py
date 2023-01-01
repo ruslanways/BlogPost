@@ -182,8 +182,7 @@ EMAIL_USE_SSL = True
 EMAIL_PORT = 465
 EMAIL_HOST = 'smtppro.zoho.eu'
 EMAIL_HOST_USER = 'admin@postways.net'
-DEFAULT_FROM_EMAIL = 'admin@postways.net'
-
+DEFAULT_FROM_EMAIL = 'Postways Social Network <admin@postways.net>'
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
