@@ -180,7 +180,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_USE_SSL = True
 EMAIL_PORT = 465
-EMAIL_HOST = 'smtp.mail.eu-west-1.awsapps.com'
+EMAIL_HOST = 'smtppro.zoho.eu'
 EMAIL_HOST_USER = 'admin@postways.net'
 DEFAULT_FROM_EMAIL = 'admin@postways.net'
 
