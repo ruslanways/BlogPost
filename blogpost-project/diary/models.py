@@ -52,17 +52,17 @@ class Post(models.Model):
     updated = models.DateTimeField(auto_now=True)
     published = models.BooleanField(default=True)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Open the image using Pillow
-        img = Image.open(self.image.path)
-        # Set the maximum size of the image
-        max_size = (2000, 2000)
-        # Resize the image if it exceeds the maximum size
-        if img.size > max_size:
-            img.thumbnail(max_size)
-        # Save the image
-        img.save(self.image.path)
+    # def save(self, *args, **kwargs):
+    #     super().save(*args, **kwargs)
+    #     # Open the image using Pillow
+    #     img = Image.open(self.image.path)
+    #     # Set the maximum size of the image
+    #     max_size = (2000, 2000)
+    #     # Resize the image if it exceeds the maximum size
+    #     if img.size > max_size:
+    #         img.thumbnail(max_size)
+    #     # Save the image
+    #     img.save(self.image.path)
 
     class Meta:
         ordering = ['-updated']
