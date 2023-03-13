@@ -1,4 +1,4 @@
-from PIL import Image
+import cv2
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
@@ -55,15 +55,21 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if self.image:
-            # Open the image using Pillow
-            img = Image.open(self.image.path)
+            # Load the image using OpenCV
+            img = cv2.imread(self.image.path)
+            # Get the dimensions of the image
+            height, width = img.shape[:2]
             # Set the maximum size of the image
-            max_size = (2000, 2000)
-            # Resize the image if it exceeds the maximum size
-            if img.size > max_size:
-                img.thumbnail(max_size)
-            # Save the image
-            img.save(self.image.path)
+            max_size = 2000
+            # Determine the scaling factor to use for resizing the image
+            if height > max_size or width > max_size:
+                scale_factor = max_size / max(height, width)
+            else:
+                scale_factor = 1
+            # Resize the image using the scaling factor
+            resized_img = cv2.resize(img, None, fx=scale_factor, fy=scale_factor)
+            # Save the resized image to the original file path
+            cv2.imwrite(self.image.path, resized_img)
 
     class Meta:
         ordering = ['-updated']
