@@ -1,12 +1,11 @@
 {% extends 'diary/base.html' %}
-{% load static %}
 
 {% block title %} add post {% endblock %}
 
 {% block content %}
 
 
-<form method="post" class="auth-form" enctype="multipart/form-data">
+<form method="post" class="auth-form" enctype="multipart/form-data" id="myForm" onsubmit="return resizeImageAndSubmitForm()">
     {% csrf_token %}
 
     {{ form.non_field_errors }}
@@ -38,6 +37,5 @@
     <button type="submit" class="btn btn-primary">Create</button>
 </form>
 
-<script src="{% static 'diary/resize.js' %}"></script>
 {% endblock %}
 
