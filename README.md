@@ -8,3 +8,4 @@ The app build on Django 4.0 / Python 3.10.8 / Postgres 14.6 / Redis 7.0.5
 Status of last deployment:<br>
 
 
+
