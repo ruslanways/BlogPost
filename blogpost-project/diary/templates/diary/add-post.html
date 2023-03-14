@@ -1,11 +1,15 @@
+
+
 {% extends 'diary/base.html' %}
+
+{% load static %}
 
 {% block title %} add post {% endblock %}
 
 {% block content %}
 
 
-<form method="post" class="auth-form" enctype="multipart/form-data" id="myForm" onsubmit="return resizeImageAndSubmitForm()">
+<form method="post" class="auth-form" enctype="multipart/form-data" id="myForm">
     {% csrf_token %}
 
     {{ form.non_field_errors }}
@@ -34,8 +38,10 @@
     </div>
     <div class="form-text">{{form.published.errors}}</div>
 
-    <button type="submit" class="btn btn-primary">Create</button>
+    <button type="submit" class="btn btn-primary" id="createpost">Create</button>
 </form>
+
+<script src="{% static 'diary/resize.js' %}"></script>
 
 {% endblock %}
 
