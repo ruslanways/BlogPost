@@ -26,9 +26,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@1,300&display=swap" rel="stylesheet">
 </head>
 
-<body class="container">
+<body class="container" style="max-width: 991px;">
   <header>
-    <nav class="navbar fixed-top navbar-expand-lg bg-light container">
+    <nav class="navbar fixed-top navbar-expand-lg bg-light container" style="max-width: 991px;">
       <div class="container-fluid">
         <a class="navbar-brand {% if view.template_name == 'diary/index.html' %}selected{% endif %}" href="{% url 'home' %}"><img alt="logo" src="{% static 'diary/images/logo.svg' %}">postways</a>
         {% if user.is_authenticated %}
