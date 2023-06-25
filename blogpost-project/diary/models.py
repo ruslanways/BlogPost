@@ -48,6 +48,7 @@ class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField(validators=[profanity])
     image = models.ImageField(upload_to='diary/images/', blank=True)
+    thumbnail = models.ImageField(upload_to='diary/images/thumbnails/', blank=True, null=True, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     published = models.BooleanField(default=True)
@@ -57,6 +58,15 @@ class Post(models.Model):
         if self.image:
             # Load the image using OpenCV
             img = cv2.imread(self.image.path)
+
+            # Generate the thumbnail image
+            thumbnail_size = (200, 200)
+            thumbnail_image = cv2.resize(img, thumbnail_size)
+            thumbnail_path = self.image.path.replace('diary/images/', 'diary/images/thumbnails/')
+            cv2.imwrite(thumbnail_path, thumbnail_image)
+            self.thumbnail.name = thumbnail_path
+            #super().save(*args, **kwargs)
+
             # Get the dimensions of the image
             height, width = img.shape[:2]
             # Set the maximum size of the image
