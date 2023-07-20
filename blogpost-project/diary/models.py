@@ -6,7 +6,6 @@ from django.urls import reverse
 from .validators import MyUnicodeUsernameValidator, profanity
 from django.utils.translation import gettext_lazy as _
 from pathlib import Path
-import numpy as np
 
 
 class CustomUser(AbstractUser):
@@ -79,8 +78,8 @@ class Post(models.Model):
 
 
             ##########################################
-
             # Generate the thumbnail image
+
             thumbnail_size = (300, 300)
 
             thumbnail_width, thumbnail_height = thumbnail_size
@@ -100,19 +99,12 @@ class Post(models.Model):
             # Resize the image while maintaining the original aspect ratio
             thumbnail_resized_img = cv2.resize(resized_img, (new_width, new_height))
 
-
-             # Calculate the cropping box to center the resized image in the thumbnail
+            # Calculate the cropping box to center the resized image in the thumbnail
             x_offset = (new_width - thumbnail_width) // 2
             y_offset = (new_height - thumbnail_height) // 2
 
              # Crop the resized image to fit the thumbnail area (object-fit: cover)
             cropped_img = thumbnail_resized_img[y_offset:y_offset + thumbnail_height, x_offset:x_offset + thumbnail_width]
-
-            # Save the thumbnail image using OpenCV
-            # cv2.imwrite('path_to_thumbnail_image.jpg', thumbnail_image)
-
-
-            # thumbnail_image = cv2.resize(resized_img, thumbnail_size)
 
             # Get the directory path for thumbnails
             thumbnail_dir = Path(settings.MEDIA_ROOT) / 'diary/images/thumbnails'
