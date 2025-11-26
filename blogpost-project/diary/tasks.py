@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from django.core.mail import send_mail
+from django.conf import settings
 from celery import shared_task
 from .models import CustomUser, Post, Like
 
@@ -37,5 +38,5 @@ def send_week_report():
         f"new likes: {likes}\n"
         "\nHave a nice weekend😉",
         None,
-        ["ruslanways@gmail.com"]
+        settings.WEEKLY_REPORT_RECIPIENTS
     )
