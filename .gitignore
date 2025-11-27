@@ -142,6 +142,8 @@ media/
 runserver
 mm
 
+.ropeproject/
+
 # PyCharm stuff
 .idea/
 
