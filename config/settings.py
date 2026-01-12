@@ -137,6 +137,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
+# Ensure log directory exists before configuring logging
+LOG_DIR = BASE_DIR / 'var' / 'logs'
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -150,7 +154,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'var' / 'logs' / 'other_errors.log',
+            'filename': LOG_DIR / 'other_errors.log',
             'formatter': 'other_errors',
         },
     },
