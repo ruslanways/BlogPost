@@ -6,3 +6,6 @@ dump.rdb
 mm
 runserver
 venv/
+.venv
+var/
+*.log

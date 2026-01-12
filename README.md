@@ -1,4 +1,4 @@
-# BlogPost &emsp; ![postways_changes_deploy_AWS](https://github.com/ruslanways/BlogPost/actions/workflows/postways-aws-deploy.yml/badge.svg)<br>
+# Postways &emsp; ![postways_changes_deploy_AWS](https://github.com/ruslanways/BlogPost/actions/workflows/postways-aws-deploy.yml/badge.svg)<br>
 [https://postways.net/](https://postways.net/)<br>
 Simple blog web-site that allow users to make some interest posts.<br>
 

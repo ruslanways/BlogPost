@@ -1,5 +1,5 @@
 """
-ASGI config for blogpost project.
+ASGI config for postways project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -18,7 +18,7 @@ django_app = get_asgi_application()
 import diary.routing
 
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'blogpost.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 
 

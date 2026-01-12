@@ -12,26 +12,29 @@
 ```
 postways/
 ├── .env                          # Root .env file (used by Docker & production)
-├── blogpost-project/             # Main Django project directory
-│   ├── manage.py
-│   ├── blogpost/
-│   │   ├── settings.py          # Main settings file
-│   │   ├── urls.py
-│   │   ├── wsgi.py
-│   │   ├── asgi.py
-│   │   └── local_settings.py    # Local dev settings override
-│   └── diary/                    # Django app
-├── src/                          # Runtime data directory
+├── manage.py                     # Django management script
+├── config/                       # Django project configuration
+│   ├── settings.py              # Main settings file
+│   ├── urls.py
+│   ├── wsgi.py
+│   ├── asgi.py
+│   ├── celery.py
+│   └── local_settings.py        # Local dev settings override
+├── diary/                        # Django app
+├── templates/                    # Project templates
+├── var/                          # Runtime data directory
 │   ├── media/                   # User-uploaded files
 │   ├── static/                  # Collected static files
-│   ├── var/                     # Runtime data (logs, celery, redis)
+│   ├── logs/                    # Application logs
+│   ├── celery/                  # Celery data
+│   ├── redis/                   # Redis data
 │   └── schema.yaml              # API schema
 └── requirements.txt
 ```
 
 ## Settings Flow
 
-### 1. **Base Settings (`blogpost-project/blogpost/settings.py`)**
+### 1. **Base Settings (`config/settings.py`)**
 
 This is the main settings file that:
 - Loads environment variables from root `.env` file via `load_dotenv()`
@@ -41,12 +44,12 @@ This is the main settings file that:
 
 ```python
 try:
-    from .local_settings import *  # Looks for blogpost-project/blogpost/local_settings.py
+    from .local_settings import *  # Looks for config/local_settings.py
 except ImportError:
     print("Production settings apply")
 ```
 
-### 2. **Local Settings Override (`blogpost-project/blogpost/local_settings.py`)**
+### 2. **Local Settings Override (`config/local_settings.py`)**
 
 **What it does**:
 - Sets `DEBUG = True` for local development
@@ -68,7 +71,7 @@ except ImportError:
 ### **Local Development (without Docker)**
 
 **How It Works**:
-- Django loads `local_settings.py` from `blogpost-project/blogpost/`
+- Django loads `local_settings.py` from `config/`
 - Local development settings apply (DEBUG=True)
 
 **How It Works**:
@@ -81,7 +84,7 @@ except ImportError:
 
 **How It Works**:
 1. Dockerfile copies everything to `/app/`
-2. Workdir is `/app/blogpost-project`
+2. Workdir is `/app`
 3. `.dockerignore` excludes `.env` and `local_settings.py`
 4. Docker Compose provides `.env` file to containers
 5. `local_settings.py` is NOT in container (excluded)
@@ -90,26 +93,26 @@ except ImportError:
 
 ## The Confusion Points
 
-### 1. **Why `src/` directory?**
+### 1. **Why `var/` directory?**
 
-The `src/` directory serves as a container for runtime data:
-- **Runtime data**: `media/`, `static/`, `var/` (logs, celery, redis dumps)
+The `var/` directory serves as a container for runtime data:
+- **Runtime data**: `media/`, `static/`, `logs/`, `celery/`, `redis/`
 - **Generated files**: `schema.yaml`
 
-**Note**: In Docker, these are in volumes, not in `src/`. The `src/` directory is primarily for local development to keep runtime data organized separately from the Django project code.
+**Note**: In Docker, these are in volumes, not in `var/`. The `var/` directory is primarily for local development to keep runtime data organized separately from the Django project code.
 
-### 2. **Why separate `blogpost-project/` and `src/`?**
+### 2. **Why flattened structure?**
 
-- **`blogpost-project/`**: Contains all Django application code (settings, apps, templates, etc.)
-- **`src/`**: Contains runtime/generated data that changes during execution (user uploads, logs, collected static files)
+- **Root level**: Contains all Django application code (manage.py, config/, diary/, templates/)
+- **`var/`**: Contains runtime/generated data that changes during execution (user uploads, logs, collected static files)
 
-This separation keeps the project code clean and makes it easier to manage what gets committed to version control vs. what's generated at runtime.
+This flattened structure makes the project easier to navigate and understand, while keeping runtime data organized in `var/`.
 
 ## Project Structure Summary
 
 **Current Structure**: The project has a clean separation:
-- All Django code and settings in `blogpost-project/`
-- All runtime data in `src/`
+- All Django code and settings at root level (config/, diary/, templates/)
+- All runtime data in `var/`
 - Single `.env` file in root for all environments
 
 ---
@@ -136,11 +139,10 @@ This separation keeps the project code clean and makes it easier to manage what 
 
 2. **Configure environment**:
    - Ensure `.env` file exists in root with required variables
-   - `local_settings.py` should be in `blogpost-project/blogpost/`
+   - `local_settings.py` should be in `config/`
 
 3. **Database setup**:
    ```bash
-   cd blogpost-project
    python manage.py migrate
    python manage.py createsuperuser  # Optional
    ```
@@ -153,21 +155,21 @@ This separation keeps the project code clean and makes it easier to manage what 
 
 5. **Run with WebSocket support (Channels)**:
    ```bash
-   daphne -b localhost -p 8001 blogpost.asgi:application
+   daphne -b localhost -p 8001 config.asgi:application
    # WebSocket server runs on http://localhost:8001
    ```
 
 6. **Run Celery workers** (in separate terminals):
    ```bash
-   celery -A blogpost worker -l info
-   celery -A blogpost beat -l info
+   celery -A config worker -l info
+   celery -A config beat -l info
    ```
 
 **What Happens**:
 - `settings.py` loads root `.env` file
 - `local_settings.py` is imported (DEBUG=True, local DB config)
 - Uses `localhost` for database and Redis
-- Static/media files served from `src/static/` and `src/media/`
+- Static/media files served from `var/static/` and `var/media/`
 
 **Development Workflow**:
 1. Make code changes
@@ -200,10 +202,9 @@ This separation keeps the project code clean and makes it easier to manage what 
    ```
 5. **Setup test environment**:
    - Creates `.env` file in **root directory** from `DJANGO_ENV_FILE` secret
-   - Creates `local_settings.py` in `blogpost-project/blogpost/` from `LOCAL_SETTINGS` secret
+   - Creates `local_settings.py` in `config/` from `LOCAL_SETTINGS` secret
 6. **Run tests**:
    ```bash
-   cd blogpost-project
    python manage.py test
    ```
 
@@ -217,7 +218,6 @@ This separation keeps the project code clean and makes it easier to manage what 
    git pull origin main
    source .venv/bin/activate  # Activate virtual environment if it exists
    pip install -q -r requirements.txt  # Update dependencies
-   cd blogpost-project
    python manage.py migrate --noinput  # Run migrations
    python manage.py collectstatic --noinput  # Collect static files
    sudo systemctl restart gunicorn  # Restart web server
@@ -239,8 +239,8 @@ This separation keeps the project code clean and makes it easier to manage what 
 - `DEBUG = False` (production settings from `settings.py`)
 - `local_settings.py` is NOT used in production (excluded or not present)
 - Environment variables from `.env` file on server
-- Static files collected to `src/static/` or configured static root
-- Media files in `src/media/`
+- Static files collected to `var/static/` or configured static root
+- Media files in `var/media/`
 
 **Key Points**:
 - ✅ Tests run automatically before deployment
@@ -274,7 +274,7 @@ docker-compose up -d --build
    - Dockerfile copies entire project to `/app/` in container
    - Installs Python dependencies from `requirements.txt`
    - Creates non-root user `admin`
-   - Sets working directory to `/app/blogpost-project`
+   - Sets working directory to `/app`
 
 2. **Service Startup** (in order):
 
@@ -302,8 +302,8 @@ docker-compose up -d --build
    - Depends on web service
 
    **Celery Service**:
-   - Runs worker: `celery -A blogpost worker`
-   - Runs beat: `celery -A blogpost beat`
+   - Runs worker: `celery -A config worker`
+   - Runs beat: `celery -A config beat`
    - Handles background tasks and scheduled jobs
 
    **Nginx**:

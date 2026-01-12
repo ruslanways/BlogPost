@@ -156,5 +156,5 @@ schema.yaml
 # local developing settings
 local_settings.py
 
-# collected static files
-blogpost-project/static/
+# Runtime data (var/ is already ignored in Distribution/packaging section above)
+# var/ contains: media/, static/, logs/, celery/, redis/, schema.yaml

@@ -50,11 +50,10 @@ jobs:
           EOF
 
           # Write local_settings.py for test environment
-          cat << 'EOF' > blogpost-project/blogpost/local_settings.py
+          cat << 'EOF' > config/local_settings.py
           ${{ secrets.LOCAL_SETTINGS }}
           EOF
       - name: Run tests
-        working-directory: blogpost-project
         run: |
           python manage.py test
 
@@ -74,7 +73,6 @@ jobs:
             git pull origin main && 
             source .venv/bin/activate 2>/dev/null || true &&
             pip install -q -r requirements.txt &&
-            cd blogpost-project &&
             python manage.py migrate --noinput &&
             python manage.py collectstatic --noinput &&
             sudo systemctl restart gunicorn 2>/dev/null || true &&
