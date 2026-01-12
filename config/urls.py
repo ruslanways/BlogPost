@@ -38,5 +38,5 @@ if settings.DEBUG:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
     ]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Serve media files in development only
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
