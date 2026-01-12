@@ -37,11 +37,15 @@ APPEND_SLASH = True
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+# Redis host for Channels - use environment variable or default to localhost
+REDIS_HOST_CHANNELS = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT_CHANNELS = int(os.environ.get('REDIS_PORT', 6379))
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [(REDIS_HOST_CHANNELS, REDIS_PORT_CHANNELS)],
         },
     },
 }
@@ -107,14 +111,19 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# Database host - use environment variable or default to localhost
+# In Docker, this should be set to 'db' (the service name)
+DB_HOST = os.environ.get('DB_HOST', 'localhost')
+DB_PORT = os.environ.get('DB_PORT', '5432')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'blogpost_db',
         'USER': 'blogpost_user',
         'PASSWORD': os.environ.get('POSTGRES_BLOGPOST_USER_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
 
@@ -184,8 +193,10 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'ruslanways@gmail.com'
 DEFAULT_FROM_EMAIL = 'Postways Social Network <ruslanways@gmail.com>'
 
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
+# Redis host for Celery - use environment variable or default to localhost
+# In Docker, this should be set to 'redis' (the service name)
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"

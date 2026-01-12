@@ -24,6 +24,9 @@ services:
       - 8000
     env_file:
       - ./.env
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
     depends_on:
       - db
       - redis
@@ -36,6 +39,9 @@ services:
       - 8001
     env_file:
       - ./.env
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
     volumes:
       - workdir:/app/
     depends_on:
@@ -50,6 +56,9 @@ services:
       - workdir:/app
     env_file:
       - ./.env
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
     depends_on:
       - web
   nginx:
