@@ -69,16 +69,15 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-            cd BlogPost/ && 
+            cd /home/admin/BlogPost/ && 
             git pull origin main && 
-            source .venv/bin/activate 2>/dev/null || true &&
-            pip install -q -r requirements.txt &&
-            python manage.py migrate --noinput &&
-            python manage.py collectstatic --noinput &&
-            sudo systemctl restart gunicorn 2>/dev/null || true &&
-            sudo systemctl restart daphne 2>/dev/null || true &&
-            sudo systemctl restart celery 2>/dev/null || true &&
-            sudo systemctl restart celerybeat 2>/dev/null || true &&
-            sudo systemctl reload nginx 2>/dev/null || true
+            /home/admin/BlogPost/venv/bin/pip install -r requirements.txt &&
+            /home/admin/BlogPost/venv/bin/python manage.py migrate --noinput &&
+            /home/admin/BlogPost/venv/bin/python manage.py collectstatic --noinput &&
+            sudo systemctl restart gunicorn &&
+            sudo systemctl restart daphne &&
+            sudo systemctl restart celery &&
+            sudo systemctl restart celerybeat &&
+            sudo systemctl reload nginx
           '
 
