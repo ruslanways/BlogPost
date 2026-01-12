@@ -150,7 +150,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'other_errors.log',
+            'filename': BASE_DIR / 'var' / 'logs' / 'other_errors.log',
             'formatter': 'other_errors',
         },
     },
