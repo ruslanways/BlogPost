@@ -2,7 +2,7 @@
 [https://postways.net/](https://postways.net/)<br>
 Simple blog web-site that allow users to make some interest posts.<br>
 
-The app build on Django 4.0 / Python 3.10.8 / Postgres 14.6 / Redis 7.0.5
+The app build on Django 4.0 / Python 3.10.19 / Postgres 14.6 / Redis 7.0.5
 
 > OpenApi documentation available on page: /docs/
 
@@ -88,14 +88,65 @@ postways/
 
 ## 4. Settings Configuration
 
-### Settings Flow
+### Settings Architecture Overview
+
+Settings are organized in three clear layers:
+
+1. **`config/settings.py`** - Main settings file with production defaults
+2. **`.env` file** (root) - Environment variables (secrets, passwords, environment-specific values)
+3. **`config/local_settings.py`** - Local development overrides (optional, not in Docker/production)
+
+### Quick Reference: Where Settings Are Defined
+
+| Setting Type | Location | Examples |
+|-------------|----------|----------|
+| **Application Structure** | `config/settings.py` (hardcoded) | INSTALLED_APPS, MIDDLEWARE, STATIC_URL, MEDIA_URL |
+| **Production Defaults** | `config/settings.py` (hardcoded) | DEBUG=False, ALLOWED_HOSTS, database name/user |
+| **Secrets & Passwords** | `.env` file (root) | SECRET_KEY, POSTGRES_BLOGPOST_USER_PASSWORD, EMAIL_HOST_PASSWORD |
+| **Environment-Specific** | `.env` file (root) | DB_HOST, REDIS_HOST, WEEKLY_REPORT_RECIPIENTS |
+| **Local Dev Overrides** | `config/local_settings.py` | DEBUG=True, ALLOWED_HOSTS=['*'], local DB config |
+
+### Environment Variables Reference
+
+All environment variables are documented in `config/settings.py` at the top of the file. Here's what goes in your `.env` file:
+
+#### **Required Variables** (must be in `.env` for production):
+```
+SECRET_KEY=your-secret-key-here
+DATABASE_PASSWORD=your-db-password
+EMAIL_HOST_PASSWORD=your-email-password
+```
+
+#### **Optional Variables** (have defaults, override if needed):
+```
+DATABASE_HOST=localhost     # Use 'db' in Docker
+DATABASE_PORT=5432
+DATABASE_NAME=blogpost_db  # Database name (default: 'blogpost_db')
+DATABASE_USER=blogpost_user # Database user (default: 'blogpost_user')
+REDIS_HOST=localhost        # Use 'redis' in Docker
+REDIS_PORT=6379
+WEEKLY_REPORT_RECIPIENTS=ruslanways@gmail.com
+```
+
+#### **Local Development Overrides** (optional, used by `local_settings.py`):
+```
+# For local dev, you can override database settings with simpler defaults:
+DATABASE_NAME=postgres      # Local database name (default: 'postgres')
+DATABASE_USER=postgres      # Local database user (default: 'postgres')
+DATABASE_PASSWORD=postgres  # Local database password (default: 'postgres')
+# Note: DATABASE_HOST is always 'localhost' in local_settings.py
+```
+
+### Settings File Details
 
 #### 1. **Base Settings (`config/settings.py`)**
 
-This is the main settings file that:
-- Loads environment variables from root `.env` file via `load_dotenv()`
-- Sets production defaults (DEBUG=False, specific ALLOWED_HOSTS)
-- Configures database, Redis, Celery, etc.
+**What it contains:**
+- All Django application configuration (INSTALLED_APPS, MIDDLEWARE, etc.)
+- Hardcoded production defaults (DEBUG=False, ALLOWED_HOSTS, etc.)
+- Environment variable loading (centralized at the top)
+- Production database configuration
+- Redis/Celery/Email configuration using env vars
 - At the end, tries to import local overrides:
 
 ```python
@@ -105,30 +156,38 @@ except ImportError:
     print("Production settings apply")
 ```
 
+**Key sections:**
+- **Environment Variables Configuration** - Documents all env vars used
+- **Database Configuration** - Uses DATABASE_HOST, DATABASE_PORT, DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
+- **Redis Configuration** - Uses REDIS_HOST, REDIS_PORT (for Channels and Celery)
+- **Email Configuration** - Uses EMAIL_HOST_PASSWORD
+
 #### 2. **Local Settings Override (`config/local_settings.py`)**
 
-**What it does**:
+**What it does:**
 - Sets `DEBUG = True` for local development
 - Overrides `ALLOWED_HOSTS = ['*']`
-- Provides local database config (postgres/postgres/postgres)
+- Provides local database config using environment variables:
+  - `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_PORT`
+  - Defaults to `postgres/postgres/postgres` if env vars not set
+  - Always uses `localhost` for `DATABASE_HOST` (ignores .env value)
 - Only applies when NOT running in Docker
+- This file is excluded from Docker builds via `.dockerignore`
 
 #### 3. **Environment Variables (`.env` file)**
 
-**Single `.env` file:**
+**Single `.env` file location:**
 - **Root `.env`** (`/Users/ruslanways/code/postways/.env`)
   - Used by Docker Compose (all services reference `./.env`)
-  - Used by production
+  - Used by production (EC2 server)
   - Used by local development
-  - Contains: SECRET_KEY, POSTGRES_BLOGPOST_USER_PASSWORD, etc.
 
-**⚠️ CRITICAL**: The `.env` file must NEVER be deleted. It contains:
-- SECRET_KEY
-- DATABASE_URL
-- DB_PASSWORD
-- REDIS_URL
-- EMAIL_* credentials
-- DJANGO_SETTINGS_MODULE
+**⚠️ CRITICAL**: The `.env` file must NEVER be deleted or committed to git. It contains:
+- SECRET_KEY (Django secret key)
+- DATABASE_PASSWORD (database password)
+- EMAIL_HOST_PASSWORD (SMTP password)
+- WEEKLY_REPORT_RECIPIENTS (optional)
+- Local dev variables (DATABASE_NAME, DATABASE_USER, etc. - optional)
 
 ### Django Settings Checks
 
@@ -142,22 +201,53 @@ Verify:
 
 #### **Local Development (without Docker)**
 
-**How It Works**:
-1. `settings.py` loads root `.env`
-2. `settings.py` imports `local_settings.py` from same directory
-3. `local_settings.py` overrides with DEBUG=True, local DB config
-4. Uses `localhost` for database/Redis
+**Settings Flow**:
+1. `settings.py` loads environment variables from root `.env` file
+2. `settings.py` sets production defaults (DEBUG=False, production DB config)
+3. `settings.py` imports `local_settings.py` (if it exists)
+4. `local_settings.py` overrides:
+   - `DEBUG = True`
+   - `ALLOWED_HOSTS = ['*']`
+   - Database config using env vars: `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`, etc.
+   - Defaults to `postgres/postgres/postgres` if env vars not set
+5. Database/Redis use `localhost` (default values)
+
+**Required `.env` variables for local dev:**
+- `SECRET_KEY` (required)
+- `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD` (optional, have defaults)
+- `EMAIL_HOST_PASSWORD` (optional, only if testing email)
 
 #### **Docker Development/Production**
 
-**How It Works**:
-1. Dockerfile copies everything to `/app/`
-2. Workdir is `/app`
-3. `.dockerignore` excludes `.env` and `local_settings.py`
-4. Docker Compose provides `.env` file to containers
-5. `local_settings.py` is NOT in container (excluded)
-6. Production settings apply (DEBUG=False)
-7. Database/Redis use service names (`db`, `redis`) instead of `localhost`
+**Settings Flow**:
+1. Dockerfile copies everything to `/app/` (excludes `.env` and `local_settings.py` via `.dockerignore`)
+2. Docker Compose provides `.env` file to containers via `env_file: - ./.env`
+3. `settings.py` loads environment variables from `.env`
+4. `local_settings.py` is NOT in container (excluded by `.dockerignore`)
+5. Production settings apply (DEBUG=False, production DB config)
+6. Database/Redis use service names (`db`, `redis`) - set via Docker Compose environment variables
+
+**Required `.env` variables for Docker/production:**
+- `SECRET_KEY` (required)
+- `DATABASE_PASSWORD` (required)
+- `EMAIL_HOST_PASSWORD` (required)
+- `WEEKLY_REPORT_RECIPIENTS` (optional)
+- `DATABASE_HOST=db` and `REDIS_HOST=redis` (set in docker-compose.yml, not in .env)
+
+#### **Production EC2 (Direct Deployment)**
+
+**Settings Flow**:
+1. `.env` file exists on server at `/home/admin/BlogPost/.env`
+2. `settings.py` loads environment variables from `.env`
+3. `local_settings.py` does NOT exist on server
+4. Production settings apply (DEBUG=False)
+5. Database/Redis use `localhost` (default values) or configured hosts
+
+**Required `.env` variables for production:**
+- `SECRET_KEY` (required)
+- `DATABASE_PASSWORD` (required)
+- `EMAIL_HOST_PASSWORD` (required)
+- `WEEKLY_REPORT_RECIPIENTS` (optional)
 
 ---
 
@@ -175,6 +265,9 @@ Verify:
    ```bash
    git clone <repository>
    cd postways
+   # ⚠️ IMPORTANT: You MUST use Python 3.10.x to create the virtual environment
+   # Verify your Python version: python --version
+   # If you have multiple Python versions, use: python3.10 -m venv .venv
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    pip install -r requirements.txt
@@ -194,15 +287,18 @@ Verify:
    ```bash
    python manage.py runserver
    # Server runs on http://localhost:8000
+   # Note: Django automatically uses ASGI/Daphne when Channels is installed,
+   # so WebSocket support is included automatically on the same port
    ```
 
-5. **Run with WebSocket support (Channels)**:
-   ```bash
-   daphne -b localhost -p 8001 config.asgi:application
-   # WebSocket server runs on http://localhost:8001
-   ```
+**Note on WebSocket Support**: 
+- When Django Channels is installed and `ASGI_APPLICATION` is configured (as it is in this project),
+  `python manage.py runserver` automatically uses Daphne (ASGI server) instead of the default WSGI server.
+- This means **both HTTP and WebSocket connections work on the same port** (8000) during development.
+- You don't need to run a separate Daphne server for local development.
+- In production, HTTP and WebSocket are served separately (Gunicorn on port 8000, Daphne on port 8001).
 
-6. **Run Celery workers** (in separate terminals):
+5. **Run Celery workers** (in separate terminals):
    ```bash
    celery -A config worker -l info
    celery -A config beat -l info

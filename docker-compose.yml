@@ -25,7 +25,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - DB_HOST=db
+      - DATABASE_HOST=db
       - REDIS_HOST=redis
     depends_on:
       - db
@@ -40,7 +40,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - DB_HOST=db
+      - DATABASE_HOST=db
       - REDIS_HOST=redis
     volumes:
       - workdir:/app/
@@ -57,7 +57,7 @@ services:
     env_file:
       - ./.env
     environment:
-      - DB_HOST=db
+      - DATABASE_HOST=db
       - REDIS_HOST=redis
     depends_on:
       - web

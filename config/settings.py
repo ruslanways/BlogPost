@@ -15,11 +15,44 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# use .env file to load environmental variables for secret key, passwords and so on..
+# Load environment variables from root .env file
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ============================================================================
+# ENVIRONMENT VARIABLES CONFIGURATION
+# ============================================================================
+# 
+# This section documents ALL environment variables used by the application.
+# All variables are loaded from the root .env file via load_dotenv() above.
+#
+# REQUIRED VARIABLES (must be in .env):
+#   - SECRET_KEY: Django secret key (CRITICAL - never commit to git)
+#   - DATABASE_PASSWORD: Database password
+#   - EMAIL_HOST_PASSWORD: SMTP email password
+#
+# OPTIONAL VARIABLES (have defaults, can override in .env):
+#   - DATABASE_HOST: Database host (default: 'localhost', Docker: 'db')
+#   - DATABASE_PORT: Database port (default: '5432')
+#   - DATABASE_NAME: Database name (default: 'blogpost_db')
+#   - DATABASE_USER: Database user (default: 'blogpost_user')
+#   - REDIS_HOST: Redis host (default: 'localhost', Docker: 'redis')
+#   - REDIS_PORT: Redis port (default: 6379)
+#   - WEEKLY_REPORT_RECIPIENTS: Comma-separated email list (default: 'ruslanways@gmail.com')
+#
+# NOTE: For local development, local_settings.py can override DATABASE_* variables
+# with different defaults (e.g., DATABASE_NAME=postgres, DATABASE_USER=postgres)
+#
+# WHERE SETTINGS ARE DEFINED:
+#   1. Hardcoded in settings.py: Application structure, Django config, static/media paths
+#   2. Environment variables (.env): Secrets, passwords, environment-specific values
+#   3. local_settings.py: Local development overrides (DEBUG=True, local DB config)
+#      - Only loaded when NOT in Docker/production
+#      - Can use env vars or hardcoded values for local convenience
+#
+# ============================================================================
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -37,15 +70,36 @@ APPEND_SLASH = True
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-# Redis host for Channels - use environment variable or default to localhost
-REDIS_HOST_CHANNELS = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT_CHANNELS = int(os.environ.get('REDIS_PORT', 6379))
+# ============================================================================
+# ENVIRONMENT VARIABLES - Load all env vars in one place
+# ============================================================================
+
+# Database configuration (DATABASE_* prefix for consistency)
+DATABASE_HOST = os.environ.get('DATABASE_HOST', 'localhost')
+DATABASE_PORT = os.environ.get('DATABASE_PORT', '5432')
+DATABASE_NAME = os.environ.get('DATABASE_NAME', 'blogpost_db')
+DATABASE_USER = os.environ.get('DATABASE_USER', 'blogpost_user')
+DATABASE_PASSWORD = os.environ.get('DATABASE_PASSWORD')
+
+# Redis configuration (used for both Channels and Celery)
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+
+# Email configuration
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+# Weekly report recipients
+WEEKLY_REPORT_RECIPIENTS = os.environ.get('WEEKLY_REPORT_RECIPIENTS', 'ruslanways@gmail.com').split(',')
+
+# ============================================================================
+# CHANNEL LAYERS (Django Channels - WebSocket support)
+# ============================================================================
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(REDIS_HOST_CHANNELS, REDIS_PORT_CHANNELS)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }
@@ -108,22 +162,19 @@ TEMPLATES = [
     },
 ]
 
-# Database
-# https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
-# Database host - use environment variable or default to localhost
-# In Docker, this should be set to 'db' (the service name)
-DB_HOST = os.environ.get('DB_HOST', 'localhost')
-DB_PORT = os.environ.get('DB_PORT', '5432')
-
+# ============================================================================
+# DATABASE CONFIGURATION
+# ============================================================================
+# Production database settings (can be overridden by local_settings.py)
+# In Docker: DATABASE_HOST should be 'db', REDIS_HOST should be 'redis'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'blogpost_db',
-        'USER': 'blogpost_user',
-        'PASSWORD': os.environ.get('POSTGRES_BLOGPOST_USER_PASSWORD'),
-        'HOST': DB_HOST,
-        'PORT': DB_PORT,
+        'NAME': DATABASE_NAME,
+        'USER': DATABASE_USER,
+        'PASSWORD': DATABASE_PASSWORD,
+        'HOST': DATABASE_HOST,
+        'PORT': DATABASE_PORT,
     }
 }
 
@@ -189,19 +240,21 @@ MEDIA_ROOT = BASE_DIR / 'media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ============================================================================
+# EMAIL CONFIGURATION
+# ============================================================================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'ruslanways@gmail.com'
 DEFAULT_FROM_EMAIL = 'Postways Social Network <ruslanways@gmail.com>'
+# EMAIL_HOST_PASSWORD loaded from env vars above
 
-# Redis host for Celery - use environment variable or default to localhost
-# In Docker, this should be set to 'redis' (the service name)
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
-
+# ============================================================================
+# CELERY CONFIGURATION
+# ============================================================================
+# Uses REDIS_HOST and REDIS_PORT loaded from env vars above
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 
@@ -267,8 +320,14 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
-WEEKLY_REPORT_RECIPIENTS = os.environ.get('WEEKLY_REPORT_RECIPIENTS', 'ruslanways@gmail.com').split(',')
+# WEEKLY_REPORT_RECIPIENTS loaded from env vars above
 
+# ============================================================================
+# LOCAL SETTINGS OVERRIDE
+# ============================================================================
+# Load local_settings.py if it exists (for local development only)
+# This file is NOT used in Docker or production environments
+# See local_settings.py for what it overrides
 try:
     from .local_settings import *
 except ImportError:

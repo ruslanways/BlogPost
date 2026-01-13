@@ -1,5 +1,7 @@
 .git
 .env
+# Exception: .env.ci.example is documentation, safe to include in Docker image
+!.env.ci.example
 .idea
 .vscode
 dump.rdb

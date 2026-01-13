@@ -1,4 +1,10 @@
 # make automatic testing and then deploying 'Postways' changes to AWS EC2 running instance
+#
+# ENVIRONMENT VARIABLES:
+# - The workflow uses GitHub Secrets for sensitive configuration
+# - POSTWAYS_CI_DOTENV secret MUST match the schema defined in .env.ci.example
+#   (see repository root). GitHub Actions writes it to .env before running tests.
+# - POSTGRES_* variables below are Docker container env vars (not Django), used by postgres:14.6 image
 
 name: postways_changes_deploy_AWS
 
@@ -12,6 +18,9 @@ jobs:
     services:
       postgres:
         image: postgres:14.6
+        # NOTE: These POSTGRES_* variables are Docker container environment variables
+        # used by the postgres:14.6 image itself, NOT Django environment variables.
+        # They configure the PostgreSQL container, not the Django application.
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -44,14 +53,9 @@ jobs:
           pip install -r requirements.txt
       - name: Setup test environment
         run: |
-          # Write .env file in root (matches documentation)
+          # Write .env file in repo root
           cat << 'EOF' > .env
-          ${{ secrets.DJANGO_ENV_FILE }}
-          EOF
-
-          # Write local_settings.py for test environment
-          cat << 'EOF' > config/local_settings.py
-          ${{ secrets.LOCAL_SETTINGS }}
+          ${{ secrets.POSTWAYS_CI_DOTENV }}
           EOF
       - name: Run tests
         run: |
@@ -63,9 +67,9 @@ jobs:
     steps:
       - name: Deploy to EC2
         env: 
-          PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.HOSTNAME }}
-          USER_NAME: ${{ secrets.USER_NAME }}
+          PRIVATE_KEY: ${{ secrets.POSTWAYS_EC2_SSH_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.POSTWAYS_EC2_HOST }}
+          USER_NAME: ${{ secrets.POSTWAYS_EC2_USER }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '

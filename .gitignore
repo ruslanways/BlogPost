@@ -93,6 +93,8 @@ celerybeat.pid
 
 # Environments
 .env
+# Exception: .env.ci.example should be tracked (it's documentation for CI)
+!.env.ci.example
 .venv
 env/
 venv/
