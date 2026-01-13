@@ -35,7 +35,7 @@ The app build on Django 4.0 / Python 3.10.19 / Postgres 14.6 / Redis 7.0.5
 | Cache / Broker | Redis | Celery broker, caching |
 | CDN | Cloudflare | Caching, WAF, TLS |
 
-**Note on Nginx Configuration**: The `nginx.conf` file in the project root is configured for Dockerized deployment (uses service names like `web:8000` and `channels:8001`). On the production server, Nginx uses different settings located at `/etc/nginx/sites-available/blogpost` that are configured for the actual EC2 deployment environment.
+**Note on Nginx Configuration**: The `nginx.docker.conf` file in the project root is configured for Dockerized deployment (uses service names like `web:8000` and `channels:8001`). On the production server, Nginx uses different settings located at `/etc/nginx/sites-available/blogpost` that are configured for the actual EC2 deployment environment.
 
 ---
 
@@ -54,7 +54,7 @@ The app build on Django 4.0 / Python 3.10.19 / Postgres 14.6 / Redis 7.0.5
 postways/
 ├── .env                          # Root .env file (used by Docker & production)
 ├── manage.py                     # Django management script
-├── nginx.conf                    # Nginx config for Docker (see note above)
+├── nginx.docker.conf              # Nginx config for Docker (see note above)
 ├── config/                       # Django project configuration
 │   ├── settings.py              # Main settings file
 │   ├── urls.py
@@ -462,7 +462,7 @@ docker-compose up -d --build
    - Routes `/` → web:8000 (HTTP)
    - Routes `/ws/` → channels:8001 (WebSocket)
    - Serves static/media files from volumes
-   - Uses `nginx.conf` from project root
+   - Uses `nginx.docker.conf` from project root
 
 #### **Step 2: Service Management**
 
