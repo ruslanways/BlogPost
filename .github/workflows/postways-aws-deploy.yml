@@ -73,11 +73,11 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-            cd /home/admin/BlogPost/ && 
+            cd /home/admin/postways/ && 
             git pull origin main && 
-            /home/admin/BlogPost/venv/bin/pip install -r requirements.txt &&
-            /home/admin/BlogPost/venv/bin/python manage.py migrate --noinput &&
-            /home/admin/BlogPost/venv/bin/python manage.py collectstatic --noinput &&
+            /home/admin/postways/venv/bin/pip install -r requirements.txt &&
+            /home/admin/postways/venv/bin/python manage.py migrate --noinput &&
+            /home/admin/postways/venv/bin/python manage.py collectstatic --noinput &&
             sudo systemctl restart gunicorn &&
             sudo systemctl restart daphne &&
             sudo systemctl restart celery &&

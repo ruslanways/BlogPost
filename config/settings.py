@@ -192,6 +192,10 @@ AUTH_PASSWORD_VALIDATORS = [
 LOG_DIR = BASE_DIR / 'var' / 'logs'
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
+# Ensure celery directory exists for runtime artifacts
+CELERY_DIR = BASE_DIR / 'var' / 'celery'
+CELERY_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -257,6 +261,9 @@ DEFAULT_FROM_EMAIL = 'Postways Social Network <ruslanways@gmail.com>'
 # Uses REDIS_HOST and REDIS_PORT loaded from env vars above
 CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+
+# Store celerybeat schedule database in var/celery directory
+CELERY_BEAT_SCHEDULE_FILENAME = str(CELERY_DIR / 'celerybeat-schedule')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
