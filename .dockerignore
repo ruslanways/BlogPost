@@ -10,4 +10,5 @@ runserver
 venv/
 .venv
 var/
+staticfiles/
 *.log

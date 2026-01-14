@@ -1,11 +1,21 @@
-# syntax=docker/dockerfile:1
 FROM python:3.10
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+
+# Prevent Python from writing .pyc files and ensure output is unbuffered
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Copy application code and set working directory
 COPY . /app/
 WORKDIR /app
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-RUN useradd admin
-RUN chown -R admin:admin .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Create non-root user and required directories
+RUN useradd --no-create-home admin && \
+    mkdir -p staticfiles && \
+    chown -R admin:admin .
+
+# Switch to non-root user for security
 USER admin:admin
